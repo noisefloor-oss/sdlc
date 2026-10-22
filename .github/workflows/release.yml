@@ -1,0 +1,104 @@
+name: release
+
+# Tag-triggered builds run only in the public mirror on hosted runners.
+# Every job is guarded so tags in other repositories are a no-op, and
+# release assets can be traced to their public source and build logs.
+on:
+  push:
+    tags: ['v*']
+
+# Only release creation and asset publication hold write authority;
+# neither job checks out or executes repository code.
+permissions:
+  contents: read
+
+env:
+  TMPDIR: /tmp
+
+jobs:
+  release:
+    if: github.repository == 'noisefloor-oss/sdlc'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Ensure the release for the tag exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          # Preserve an existing release, including draft status and curated notes.
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 && exit 0
+          gh release create "$GITHUB_REF_NAME" --verify-tag \
+            --title "$GITHUB_REF_NAME" \
+            --notes "noise-sdlc $GITHUB_REF_NAME — binaries and SHA256SUMS attached by the release workflow."
+
+  build:
+    if: github.repository == 'noisefloor-oss/sdlc'
+    needs: release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            arch: amd64
+          - os: ubuntu-24.04-arm
+            arch: arm64
+    runs-on: ${{ matrix.os }}
+    env:
+      GOOS: linux
+      GOARCH: ${{ matrix.arch }}
+      ASSET: noise-sdlc-linux-${{ matrix.arch }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: Build the standalone binary
+        run: CGO_ENABLED=0 go build -trimpath -o "$ASSET" ./cmd/noise-sdlc
+      - name: Smoke-run version and help
+        run: |
+          # A shakeout tag such as v0.4.0-rc.1 still builds the source version
+          # 0.4.0, so compare against the tag without its pre-release suffix.
+          VERSION="${GITHUB_REF_NAME#v}"; VERSION="${VERSION%%-*}"
+          bin="$GITHUB_WORKSPACE/$ASSET"
+          temp_dir=$(mktemp -d)
+          trap 'rmdir "$temp_dir"' EXIT
+          cd "$temp_dir"
+          # The repository builds its source version without linker overrides.
+          actual=$("$bin" --version)
+          if [ "$actual" != "$VERSION" ]; then
+            echo "version smoke failed: got '$actual', want '$VERSION' (tag $GITHUB_REF_NAME)" >&2
+            exit 1
+          fi
+          "$bin" --help
+      - name: Upload workflow artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: noise-sdlc-linux-${{ matrix.arch }}
+          path: ${{ env.ASSET }}
+          if-no-files-found: error
+
+  publish:
+    if: github.repository == 'noisefloor-oss/sdlc'
+    # Asset publication waits for every architecture to build and pass smoke checks.
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: noise-sdlc-linux-*
+          merge-multiple: true
+      - name: Attach binaries and SHA256SUMS to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          sha256sum noise-sdlc-linux-* > SHA256SUMS
+          cat SHA256SUMS
+          gh release upload "$GITHUB_REF_NAME" \
+            noise-sdlc-linux-* SHA256SUMS --clobber

@@ -1,0 +1,24 @@
+{
+  "id": "pi",
+  "executable": "pi",
+  "versionProbe": {"argv": ["pi", "--version"], "timeoutSeconds": 5, "format": "lines", "source": "static"},
+  "versionPattern": "^(?P<version>[0-9]+\\.[0-9]+\\.[0-9]+)$",
+  "enumerationProbe": null,
+  "isolation": "external-required",
+  "ranges": [{
+    "minimum": "0.84.3",
+    "maximumExclusive": "0.84.4",
+    "status": "experimental",
+    "capabilities": ["noninteractive", "structured-output", "reasoning-level", "ephemeral-session", "resume"],
+    "reasoningLevels": ["off", "minimal", "low", "medium", "high", "xhigh", "max"],
+    "run": ["pi", "--print", "--mode", "json", "--no-session", "--no-extensions", "--model", "{model}", "--thinking", "{reasoning}", "{prompt}"],
+    "modelFlag": "--model",
+    "reasoningFlag": "--thinking",
+    "structuredOutput": "--mode json",
+    "certification": {"schema": false, "argv": false, "fakeCli": false, "resolver": false, "live": "missing", "deck": "missing", "testedVersions": [], "certifiedAt": null, "resultDigest": null}
+  }],
+  "models": [
+    {"id": "zai/glm-5.3", "modelFamily": "zai-glm-5.3", "qualityTier": "frontier", "entitlement": "unknown", "reasoningLevels": ["low", "high", "max"], "status": "experimental"}
+  ],
+  "sources": ["https://github.com/earendil-works/pi/releases/tag/v0.84.3", "https://z.ai/blog/glm-5.3"]
+}

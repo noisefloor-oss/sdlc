@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "seed": "noise/agent@0.1",
+  "executionTemplate": "deck/balanced@0.2",
+  "answers": {
+    "authorship": "agent",
+    "delivery": "software",
+    "risk": "ordinary",
+    "routingPreference": "balanced",
+    "highRiskClasses": []
+  },
+  "operatorCapabilities": [],
+  "projectRules": [
+    {
+      "id": "project.example.checks",
+      "title": "Run Go checks",
+      "requirement": "Run go build ./..., go vet ./..., and go test ./... against the candidate revision before review.",
+      "applicability": "change-delivery",
+      "assurance": "project",
+      "owner": "project check commands",
+      "contract": "go build ./... && go vet ./... && go test ./...",
+      "critical": true
+    }
+  ]
+}

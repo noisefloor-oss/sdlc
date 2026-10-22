@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noise.invalid/sdlc/answers.schema.json",
+  "title": "noise sdlc guided answers",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "seed", "executionTemplate", "answers", "operatorCapabilities", "projectRules"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "seed": {"const": "noise/agent@0.1"},
+    "executionTemplate": {"const": "deck/balanced@0.2"},
+    "answers": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["authorship", "delivery", "risk", "routingPreference", "highRiskClasses"],
+      "properties": {
+        "authorship": {"enum": ["agent", "mixed", "human"]},
+        "delivery": {"enum": ["software", "research", "both"]},
+        "risk": {"enum": ["ordinary", "elevated"]},
+        "routingPreference": {"enum": ["included-first", "balanced", "capability-first"]},
+        "highRiskClasses": {"type": "array", "items": {"type": "string", "pattern": "^[a-z0-9][a-z0-9.-]*$"}, "uniqueItems": true}
+      },
+      "allOf": [
+        {"if": {"properties": {"risk": {"const": "elevated"}}}, "then": {"properties": {"highRiskClasses": {"minItems": 1}}}},
+        {"if": {"properties": {"risk": {"const": "ordinary"}}}, "then": {"properties": {"highRiskClasses": {"maxItems": 0}}}}
+      ]
+    },
+    "operatorCapabilities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["harness", "model", "entitlement", "allowUnverified"],
+        "properties": {
+          "harness": {"type": "string", "pattern": "^[a-z0-9][a-z0-9.-]*$"},
+          "model": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._/-]*$"},
+          "entitlement": {"enum": ["included", "metered", "unknown"]},
+          "allowUnverified": {"type": "boolean"}
+        }
+      }
+    },
+    "projectRules": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "title", "requirement", "applicability", "assurance", "owner", "contract", "critical"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^project\\.[a-z0-9-]+\\.[a-z0-9.-]+$"}, "title": {"type": "string"}, "requirement": {"type": "string"},
+          "applicability": {"enum": ["all-work", "agent-authored", "change-delivery", "external-effects", "non-deterministic-claims"]},
+          "assurance": {"enum": ["provider", "project", "manual", "advisory"]}, "owner": {"type": ["string", "null"]}, "contract": {"type": ["string", "null"]},
+          "critical": {"type": "boolean"}
+        },
+        "allOf": [
+          {"if": {"properties": {"assurance": {"enum": ["provider", "project"]}}, "required": ["assurance"]}, "then": {"properties": {"owner": {"type": "string", "minLength": 1}, "contract": {"type": "string", "minLength": 1}}}}
+        ]
+      }
+    }
+  }
+}

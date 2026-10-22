@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noise.invalid/sdlc/deck-sync-receipt.schema.json",
+  "title": "Deck to noise sdlc sync receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "kind", "catalogDigest", "deckVersion", "observedAt", "inventory"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "kind": {"const": "noise.deck.sdlc-receipt"},
+    "catalogDigest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "deckVersion": {"type": "string", "minLength": 1},
+    "observedAt": {"type": "string", "format": "date-time"},
+    "inventory": {
+      "allOf": [
+        {"$ref": "inventory.schema.json"},
+        {
+          "properties": {
+            "source": {"const": "deck-runtime"},
+            "harnesses": {
+              "items": {
+                "properties": {
+                  "state": {"enum": ["absent", "installed", "ready", "enumerated"]},
+                  "rangeStatus": {"enum": ["unverified", "absent"]},
+                  "models": {
+                    "items": {
+                      "properties": {
+                        "modelFamily": {"type": "null"}, "qualityTier": {"const": "unknown"}, "entitlement": {"const": "unknown"},
+                        "reasoningLevels": {"maxItems": 0}, "provenance": {"const": "enumerated"}, "verified": {"const": false}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

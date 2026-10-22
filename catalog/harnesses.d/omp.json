@@ -1,0 +1,172 @@
+{
+  "id": "omp",
+  "executable": "omp",
+  "versionProbe": {"argv": ["omp", "--version"], "timeoutSeconds": 5, "format": "lines", "source": "static"},
+  "versionPattern": "^omp/(?P<version>[0-9]+\\.[0-9]+\\.[0-9]+)$",
+  "enumerationProbe": {"argv": ["omp", "models", "--json", "--no-extensions"], "timeoutSeconds": 10, "format": "json", "source": "configured", "idFields": ["selector"]},
+  "isolation": "harness-permissions",
+  "ranges": [{
+    "minimum": "18.0.7",
+    "maximumExclusive": "18.0.8",
+    "status": "experimental",
+    "capabilities": ["noninteractive", "structured-output", "reasoning-level", "ephemeral-session", "resume", "permission-boundary", "model-enumeration"],
+    "reasoningLevels": ["off", "minimal", "low", "medium", "high", "xhigh", "max"],
+    "run": ["omp", "--print", "--mode", "json", "--no-session", "--approval-mode", "write", "--model", "{model}", "--thinking", "{reasoning}", "--cwd", "{workspace}", "{prompt}"],
+    "modelFlag": "--model",
+    "reasoningFlag": "--thinking",
+    "structuredOutput": "--mode json",
+    "certification": {"schema": false, "argv": false, "fakeCli": false, "resolver": false, "live": "missing", "deck": "missing", "testedVersions": [], "certifiedAt": null, "resultDigest": null}
+  },
+    {
+      "minimum": "18.1.11",
+      "maximumExclusive": "18.1.12",
+      "status": "experimental",
+      "capabilities": [
+        "noninteractive",
+        "reasoning-level",
+        "ephemeral-session",
+        "resume",
+        "permission-boundary",
+        "model-enumeration"
+      ],
+      "reasoningLevels": [
+        "off",
+        "minimal",
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "run": [
+        "omp",
+        "--print",
+        "--mode",
+        "text",
+        "--no-session",
+        "--no-prewalk",
+        "--approval-mode",
+        "write",
+        "--model",
+        "{model}",
+        "--thinking",
+        "{reasoning}",
+        "--cwd",
+        "{workspace}",
+        "@{promptFile}"
+      ],
+      "modelFlag": "--model",
+      "reasoningFlag": "--thinking",
+      "structuredOutput": null,
+      "certification": {
+        "schema": false,
+        "argv": false,
+        "fakeCli": false,
+        "resolver": false,
+        "live": "missing",
+        "deck": "missing",
+        "testedVersions": [],
+        "certifiedAt": null,
+        "resultDigest": null
+      },
+      "invocation": {
+        "schemaVersion": 1,
+        "actions": {
+          "execution": {
+            "argv": [
+              "omp",
+              "--print",
+              "--mode",
+              "text",
+              "--no-session",
+              "--no-prewalk",
+              "--approval-mode",
+              "write",
+              "--model",
+              "{model}",
+              "--thinking",
+              "{reasoning}",
+              "--cwd",
+              "{workspace}",
+              "@{promptFile}"
+            ],
+            "workingDirectory": "argv",
+            "prompt": {
+              "transport": "at-file",
+              "maxBytes": 262144
+            },
+            "permissions": {
+              "mode": "harness-policy",
+              "externalBoundary": "required",
+              "limitations": [
+                "write approval mode does not prove a read-only review boundary.",
+                "The runner owns prompt-file creation and cleanup and must enforce authorized effects.",
+                "Exact model selectors and no-prewalk do not attest the model actually used."
+              ]
+            },
+            "output": {
+              "normalizer": "final-text-v1",
+              "maxBytes": 1048576
+            },
+            "completion": {
+              "successExitCode": 0,
+              "requiresFinalOutput": true,
+              "taskCompletion": "not-established"
+            }
+          },
+          "review": {
+            "argv": [
+              "omp",
+              "--print",
+              "--mode",
+              "text",
+              "--no-session",
+              "--no-prewalk",
+              "--approval-mode",
+              "write",
+              "--model",
+              "{model}",
+              "--thinking",
+              "{reasoning}",
+              "--cwd",
+              "{workspace}",
+              "@{promptFile}"
+            ],
+            "workingDirectory": "argv",
+            "prompt": {
+              "transport": "at-file",
+              "maxBytes": 262144
+            },
+            "permissions": {
+              "mode": "harness-policy",
+              "externalBoundary": "required",
+              "limitations": [
+                "write approval mode does not prove a read-only review boundary.",
+                "The runner owns prompt-file creation and cleanup and must enforce authorized effects.",
+                "Exact model selectors and no-prewalk do not attest the model actually used."
+              ]
+            },
+            "output": {
+              "normalizer": "final-text-v1",
+              "maxBytes": 1048576
+            },
+            "completion": {
+              "successExitCode": 0,
+              "requiresFinalOutput": true,
+              "taskCompletion": "not-established"
+            },
+            "publication": {
+              "contract": "noise-review-v1",
+              "actor": "reviewer",
+              "requiresReadback": true,
+              "auditRecord": "last-nonempty-line-json"
+            }
+          }
+        }
+      }
+    }],
+  "models": [
+    {"id": "zai/glm-5.3", "modelFamily": "zai-glm-5.3", "qualityTier": "frontier", "entitlement": "included", "reasoningLevels": ["low", "high", "max"], "status": "experimental"}
+  ],
+  "sources": ["https://github.com/can1357/oh-my-pi/releases/tag/v18.0.7", "https://z.ai/blog/glm-5.3"]
+}

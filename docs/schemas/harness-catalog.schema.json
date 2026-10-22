@@ -1,0 +1,380 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noise.invalid/sdlc/harness-catalog.schema.json",
+  "title": "noise sdlc harness catalog",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "catalog", "harnesses"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "catalog": {"type": "string", "pattern": "^noise/harnesses@[0-9]+\\.[0-9]+$"},
+    "harnesses": {"type": "array", "items": {"$ref": "#/$defs/harness"}}
+  },
+  "$defs": {
+    "argv": {"type": "array", "minItems": 1, "items": {"type": "string", "not": {"pattern": "[;&|`$<>]"}}},
+    "probe": {
+      "type": "object", "additionalProperties": false,
+      "required": ["argv", "timeoutSeconds", "format", "source"],
+      "properties": {"argv": {"$ref": "#/$defs/argv"}, "timeoutSeconds": {"type": "integer", "minimum": 1, "maximum": 10}, "format": {"enum": ["lines", "json", "jsonl"]}, "source": {"enum": ["static", "configured", "entitled"]}, "idFields": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$"}, "uniqueItems": true}}
+    },
+    "versionRange": {
+      "type": "object", "additionalProperties": false,
+      "required": ["minimum", "maximumExclusive", "status", "capabilities", "reasoningLevels", "run", "modelFlag", "reasoningFlag", "structuredOutput", "certification"],
+      "properties": {
+        "minimum": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"}, "maximumExclusive": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+        "status": {"enum": ["experimental", "supported"]}, "capabilities": {"type": "array", "items": {"$ref": "#/$defs/capability"}, "uniqueItems": true},
+        "reasoningLevels": {"type": "array", "items": {"enum": ["off", "minimal", "low", "medium", "high", "xhigh", "max"]}, "uniqueItems": true},
+        "run": {"$ref": "#/$defs/argv"}, "modelFlag": {"type": ["string", "null"]}, "reasoningFlag": {"type": ["string", "null"]},
+        "structuredOutput": {"type": ["string", "null"]}, "certification": {"$ref": "#/$defs/certification"},
+        "invocation": {"$ref": "#/$defs/invocation"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"status": {"const": "supported"}}, "required": ["status"]},
+          "then": {
+            "properties": {
+              "certification": {
+                "properties": {
+                  "schema": {"const": true}, "argv": {"const": true}, "fakeCli": {"const": true}, "resolver": {"const": true},
+                  "live": {"const": "passed"}, "deck": {"const": "passed"},
+                  "testedVersions": {"minItems": 1}, "certifiedAt": {"type": "string", "format": "date-time"},
+                  "resultDigest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "certification": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema", "argv", "fakeCli", "resolver", "live", "deck", "testedVersions", "certifiedAt", "resultDigest"],
+      "properties": {
+        "schema": {"type": "boolean"}, "argv": {"type": "boolean"}, "fakeCli": {"type": "boolean"}, "resolver": {"type": "boolean"},
+        "live": {"enum": ["passed", "missing"]}, "deck": {"enum": ["passed", "missing", "not-applicable"]},
+        "testedVersions": {"type": "array", "items": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"}, "uniqueItems": true},
+        "certifiedAt": {"type": ["string", "null"], "format": "date-time"},
+        "resultDigest": {"anyOf": [{"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}, {"type": "null"}]}
+      }
+    },
+    "invocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "actions"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "actions": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [],
+          "properties": {
+            "execution": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/invocationAction"
+                },
+                {
+                  "not": {
+                    "required": [
+                      "publication"
+                    ]
+                  }
+                }
+              ]
+            },
+            "review": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/invocationAction"
+                },
+                {
+                  "required": [
+                    "publication"
+                  ]
+                }
+              ]
+            }
+          },
+          "minProperties": 1
+        }
+      }
+    },
+    "invocationAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "argv",
+        "workingDirectory",
+        "prompt",
+        "permissions",
+        "output",
+        "completion"
+      ],
+      "properties": {
+        "argv": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "not": {
+              "pattern": "[;&|`$<>\\x00-\\x1f\\x7f]"
+            },
+            "oneOf": [
+              {
+                "enum": [
+                  "{model}",
+                  "{reasoning}",
+                  "{workspace}",
+                  "@{promptFile}"
+                ]
+              },
+              {
+                "not": {
+                  "pattern": "[{}]"
+                }
+              }
+            ]
+          },
+          "allOf": [
+            {
+              "contains": {
+                "const": "{model}"
+              },
+              "minContains": 1,
+              "maxContains": 1
+            },
+            {
+              "contains": {
+                "const": "{reasoning}"
+              },
+              "minContains": 1,
+              "maxContains": 1
+            }
+          ]
+        },
+        "workingDirectory": {
+          "enum": [
+            "process-cwd",
+            "argv"
+          ]
+        },
+        "prompt": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "transport",
+            "maxBytes"
+          ],
+          "properties": {
+            "transport": {
+              "enum": [
+                "stdin-text",
+                "at-file"
+              ]
+            },
+            "maxBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4194304
+            }
+          }
+        },
+        "permissions": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mode",
+            "externalBoundary",
+            "limitations"
+          ],
+          "properties": {
+            "mode": {
+              "const": "harness-policy"
+            },
+            "externalBoundary": {
+              "const": "required"
+            },
+            "limitations": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 8,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512,
+                "pattern": "\\S",
+                "not": {
+                  "pattern": "[\\x00-\\x1f\\x7f]"
+                }
+              }
+            }
+          }
+        },
+        "output": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "normalizer",
+            "maxBytes"
+          ],
+          "properties": {
+            "normalizer": {
+              "const": "final-text-v1"
+            },
+            "maxBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 16777216
+            }
+          }
+        },
+        "completion": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "successExitCode",
+            "requiresFinalOutput",
+            "taskCompletion"
+          ],
+          "properties": {
+            "successExitCode": {
+              "const": 0
+            },
+            "requiresFinalOutput": {
+              "const": true
+            },
+            "taskCompletion": {
+              "const": "not-established"
+            }
+          }
+        },
+        "publication": {
+          "$ref": "#/$defs/invocationPublication"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "workingDirectory": {
+                "const": "process-cwd"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "argv": {
+                "contains": {
+                  "const": "{workspace}"
+                },
+                "minContains": 0,
+                "maxContains": 0
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "argv": {
+                "contains": {
+                  "const": "{workspace}"
+                },
+                "minContains": 1,
+                "maxContains": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "prompt": {
+                "properties": {
+                  "transport": {
+                    "const": "stdin-text"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "argv": {
+                "contains": {
+                  "const": "@{promptFile}"
+                },
+                "minContains": 0,
+                "maxContains": 0
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "argv": {
+                "contains": {
+                  "const": "@{promptFile}"
+                },
+                "minContains": 1,
+                "maxContains": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "invocationPublication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "actor",
+        "requiresReadback",
+        "auditRecord"
+      ],
+      "properties": {
+        "contract": {
+          "const": "noise-review-v1"
+        },
+        "actor": {
+          "const": "reviewer"
+        },
+        "requiresReadback": {
+          "const": true
+        },
+        "auditRecord": {
+          "const": "last-nonempty-line-json"
+        }
+      }
+    },
+    "capability": {"enum": ["noninteractive", "structured-output", "reasoning-level", "ephemeral-session", "resume", "read-only-tools", "permission-boundary", "model-enumeration"]},
+    "harness": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "executable", "versionProbe", "versionPattern", "enumerationProbe", "isolation", "ranges", "models", "sources"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9.-]*$"}, "executable": {"type": "string", "pattern": "^[a-z0-9][a-z0-9.-]*$"},
+        "versionProbe": {"$ref": "#/$defs/probe"}, "versionPattern": {"type": "string"}, "enumerationProbe": {"oneOf": [{"$ref": "#/$defs/probe"}, {"type": "null"}]},
+        "isolation": {"enum": ["harness-permissions", "external-required"]}, "ranges": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/versionRange"}},
+        "models": {"type": "array", "items": {"$ref": "#/$defs/model"}},
+        "sources": {"type": "array", "minItems": 1, "items": {"type": "string", "format": "uri"}, "uniqueItems": true}
+      }
+    },
+    "model": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "modelFamily", "qualityTier", "entitlement", "reasoningLevels", "status"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._/-]*$"}, "modelFamily": {"type": "string"},
+        "qualityTier": {"enum": ["economy", "balanced", "frontier"]}, "entitlement": {"enum": ["included", "metered", "unknown"]},
+        "reasoningLevels": {"type": "array", "items": {"enum": ["off", "minimal", "low", "medium", "high", "xhigh", "max"]}, "uniqueItems": true},
+        "status": {"enum": ["experimental", "supported"]}
+      }
+    }
+  }
+}

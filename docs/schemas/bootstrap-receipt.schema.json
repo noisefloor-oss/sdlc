@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noise.invalid/sdlc/bootstrap-receipt.schema.json",
+  "title": "noise sdlc one-time bootstrap receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "renderer", "status", "outputs", "agentsCreated"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "renderer": {"const": "noise-sdlc-bootstrap@0.1"},
+    "status": {"const": "pending"},
+    "outputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["AGENTS.block", "BOOTSTRAP.md"],
+      "properties": {
+        "AGENTS.block": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "BOOTSTRAP.md": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+      }
+    },
+    "agentsCreated": {"type": "boolean"}
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "id": "command-code",
+  "executable": "command-code",
+  "versionProbe": {"argv": ["command-code", "--version"], "timeoutSeconds": 5, "format": "lines", "source": "static"},
+  "versionPattern": "^(?P<version>[0-9]+\\.[0-9]+\\.[0-9]+)$",
+  "enumerationProbe": {"argv": ["command-code", "--list-models"], "timeoutSeconds": 10, "format": "lines", "source": "entitled"},
+  "isolation": "harness-permissions",
+  "ranges": [{
+    "minimum": "1.21.0",
+    "maximumExclusive": "1.21.1",
+    "status": "experimental",
+    "capabilities": ["noninteractive", "structured-output", "reasoning-level", "ephemeral-session", "resume", "permission-boundary", "model-enumeration"],
+    "reasoningLevels": ["low", "medium", "high"],
+    "run": ["command-code", "--print", "--output-format", "json", "--no-session", "--skip-onboarding", "--permission-mode", "standard", "--model", "{model}", "--effort", "{reasoning}", "{prompt}"],
+    "modelFlag": "--model",
+    "reasoningFlag": "--effort",
+    "structuredOutput": "--output-format json",
+    "certification": {"schema": false, "argv": false, "fakeCli": false, "resolver": false, "live": "missing", "deck": "missing", "testedVersions": [], "certifiedAt": null, "resultDigest": null}
+  }],
+  "models": [
+    {"id": "deepseek/deepseek-v4-pro", "modelFamily": "deepseek-v4", "qualityTier": "balanced", "entitlement": "included", "reasoningLevels": ["low", "medium", "high"], "status": "experimental"},
+    {"id": "deepseek/deepseek-v4-flash", "modelFamily": "deepseek-v4", "qualityTier": "economy", "entitlement": "included", "reasoningLevels": ["low", "medium", "high"], "status": "experimental"}
+  ],
+  "sources": ["https://commandcode.ai/docs/reference/cli/models"]
+}

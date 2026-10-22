@@ -1,0 +1,46 @@
+#!/bin/sh
+set -eu
+
+repository_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+prebuilt=$repository_root/bin/noise-sdlc-go
+receipt=$prebuilt.receipt
+
+# A binary-only installation keeps its existing standalone entrypoint. A
+# partial source checkout must not masquerade as a standalone installation.
+if [ ! -e "$repository_root/go.mod" ] && [ ! -e "$repository_root/cmd" ] && [ ! -e "$repository_root/internal" ]; then
+    if [ -x "$prebuilt" ]; then
+        exec "$prebuilt" "$@"
+    fi
+    echo "noise-sdlc: no source checkout or prebuilt bin/noise-sdlc-go found" >&2
+    exit 2
+fi
+
+. "$repository_root/bin/launcher-common.sh"
+build_directory=$(mktemp -d "${TMPDIR:-/tmp}/noise-sdlc.XXXXXX")
+build_binary=$build_directory/noise-sdlc
+trap sdlc_cleanup EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+# Copy first so concurrent publication cannot replace the executable between
+# verification and use. A partial binary/receipt publication simply misses.
+if [ -x "$prebuilt" ] && [ -f "$receipt" ] && cp "$prebuilt" "$build_binary"; then
+    if source_digest=$(sdlc_source_digest) && binary_hash=$(sdlc_hash_file "$build_binary"); then
+        binary_digest=${binary_hash%% *}
+        printf 'noise-sdlc-prebuilt-v1\n%s\n%s\n' "$source_digest" "$binary_digest" > "$build_directory/expected-receipt"
+        if cmp -s "$receipt" "$build_directory/expected-receipt"; then
+            "$build_binary" "$@"
+            exit $?
+        fi
+    fi
+fi
+
+rm -f -- "$build_binary"
+if ! go_command=$(sdlc_go_command); then
+    echo "noise-sdlc: no verified current prebuilt; Go 1.26.10 is required to build this source checkout (run bin/build-noise-sdlc when Go is available)" >&2
+    exit 2
+fi
+
+(cd "$repository_root" && "$go_command" build -o "$build_binary" ./cmd/noise-sdlc)
+"$build_binary" "$@"

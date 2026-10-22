@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noise.invalid/sdlc/inventory.schema.json",
+  "title": "noise sdlc disposable harness inventory",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "source", "catalog", "harnesses"],
+  "properties": {
+    "schemaVersion": {"const": 1}, "source": {"enum": ["standalone-best-effort", "deck-runtime"]}, "catalog": {"type": "string"},
+    "harnesses": {"type": "array", "items": {"$ref": "#/$defs/observation"}}
+  },
+  "$defs": {
+    "observation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "state", "version", "rangeStatus", "models", "unknown", "probeErrors"],
+      "properties": {
+        "id": {"type": "string"}, "state": {"enum": ["absent", "installed", "matched", "ready", "enumerated", "operator-declared", "unverified"]},
+        "version": {"type": ["string", "null"]}, "rangeStatus": {"enum": ["experimental", "supported", "unverified", "absent"]},
+        "models": {"type": "array", "items": {"$ref": "#/$defs/model"}}, "unknown": {"type": "array", "items": {"enum": ["installed", "ready", "models", "version", "spend-authority"]}},
+        "probeErrors": {"type": "array", "items": {"enum": ["not-found", "timeout", "prompted", "nonzero", "malformed", "oversized", "sanitizer-rejected"]}}
+      }
+    },
+    "model": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "modelFamily", "qualityTier", "entitlement", "reasoningLevels", "provenance", "verified"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._~:/-]*$"}, "modelFamily": {"type": ["string", "null"]},
+        "qualityTier": {"enum": ["economy", "balanced", "frontier", "unknown"]}, "entitlement": {"enum": ["included", "metered", "unknown"]},
+        "reasoningLevels": {"type": "array", "items": {"enum": ["off", "minimal", "low", "medium", "high", "xhigh", "max"]}},
+        "provenance": {"enum": ["catalog-static", "enumerated", "operator-declared"]}, "verified": {"type": "boolean"}
+      }
+    }
+  }
+}

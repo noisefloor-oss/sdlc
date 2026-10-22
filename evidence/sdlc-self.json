@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 2,
+  "canary": {"id": "synthetic-example", "kind": "new-project", "status": "planned"},
+  "adoption": {
+    "elapsedMinutes": "unknown",
+    "questionsAsked": "unknown",
+    "recommendation": "unknown",
+    "overrideCount": "unknown",
+    "notes": "unknown"
+  },
+  "policy": {
+    "acceptedRuleIds": "unknown",
+    "movedLocalRuleIds": "unknown",
+    "removedRuleIds": "unknown",
+    "localRuleCount": "unknown",
+    "conflictCount": "unknown"
+  },
+  "ownership": {
+    "toolReferences": "unknown",
+    "actionableReferences": "unknown",
+    "authorityConfusion": "unknown"
+  },
+  "integrity": {"driftFindings": "unknown", "falsePositives": "unknown"},
+  "update": {"attempted": "unknown", "elapsedMinutes": "unknown", "conflicts": "unknown", "localRulesPreserved": "unknown", "rollback": "not-tested"},
+  "outcomes": {"prevented": "unknown", "missed": "unknown"},
+  "inventory": {"installed": "unknown", "matched": "unknown", "unverified": "unknown", "enumeratedCapabilities": "unknown", "unknownCapabilities": "unknown", "probeFailures": "unknown"},
+  "routing": "unknown",
+  "compatibility": {"argumentDrift": "unknown", "staleCatalogFacts": "unknown", "deckGaps": "unknown"},
+  "operations": {
+    "window": {
+      "start": "unknown",
+      "end": "unknown",
+      "cohort": "synthetic-example",
+      "coverage": "unknown",
+      "inclusionRule": "Synthetic example record; no delivery cohort was observed."
+    },
+    "denominator": {
+      "unit": "accepted-task",
+      "count": "unknown",
+      "sourceRefs": []
+    },
+    "interventions": {
+      "avoidable": "unknown",
+      "necessaryProductAuthority": "unknown",
+      "unclassified": "unknown",
+      "coverage": "unknown",
+      "sourceRefs": []
+    },
+    "timing": {
+      "basis": "per-task-exclusive-elapsed-sum",
+      "elapsedMilliseconds": "unknown",
+      "queueWaitMilliseconds": "unknown",
+      "executionMilliseconds": "unknown",
+      "humanDecisionWaitMilliseconds": "unknown",
+      "unattributedMilliseconds": "unknown",
+      "humanLaborMilliseconds": "unknown",
+      "humanLaborMethod": "unknown",
+      "sourceRefs": []
+    },
+    "cleanup": {
+      "scope": "canary-owned-workspaces",
+      "observedAt": "unknown",
+      "retainedWorkspaceBytes": "unknown",
+      "unknownArtifactCount": "unknown",
+      "sourceRefs": []
+    },
+    "sources": [],
+    "limitations": [
+      "Synthetic example record for the check-evidence example and test fixture; it reports no real adoption, cohort, or measurement.",
+      "Every observation is unknown rather than zero; a valid record does not establish observation truth, rates, or milestone acceptance.",
+      "The not-tested rollback value is deliberate: version 2 permits it and the historical v1 schema rejects it, so this record also exercises the v1/v2 boundary."
+    ]
+  },
+  "privacyReviewed": true
+}

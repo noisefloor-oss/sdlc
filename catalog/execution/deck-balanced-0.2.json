@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "id": "deck/balanced@0.2",
+  "roles": [
+    {
+      "id": "implementation.bulk", "minimumQuality": "economy", "preferEntitlement": "included", "reasoning": "high",
+      "constraints": [],
+      "candidates": [
+        {"harness": "command-code", "model": "deepseek/deepseek-v4-pro"},
+        {"harness": "opencode", "model": "opencode-go/deepseek-v4-flash"},
+        {"harness": "omp", "model": "zai/glm-5.3"},
+        {"harness": "opencode", "model": "opencode-go/glm-5.3"},
+        {"harness": "pi", "model": "zai/glm-5.3"},
+        {"harness": "opencode", "model": "opencode/deepseek-v4-flash-free"}
+      ],
+      "fallback": "implementation.standard"
+    },
+    {
+      "id": "implementation.standard", "minimumQuality": "balanced", "preferEntitlement": "included", "reasoning": "high",
+      "constraints": [],
+      "candidates": [
+        {"harness": "opencode", "model": "opencode-go/deepseek-v4-pro"},
+        {"harness": "omp", "model": "zai/glm-5.3"},
+        {"harness": "opencode", "model": "opencode-go/glm-5.3"},
+        {"harness": "pi", "model": "zai/glm-5.3"}
+      ],
+      "fallback": "implementation.high"
+    },
+    {
+      "id": "implementation.high", "minimumQuality": "frontier", "preferEntitlement": "any", "reasoning": "high",
+      "constraints": [],
+      "candidates": [
+        {"harness": "claude", "model": "claude-opus-5"},
+        {"harness": "omp", "model": "zai/glm-5.3"},
+        {"harness": "codex", "model": "gpt-5.6-sol"},
+        {"harness": "opencode", "model": "opencode-go/glm-5.3"},
+        {"harness": "pi", "model": "zai/glm-5.3"}
+      ],
+      "fallback": null
+    },
+    {
+      "id": "review.formal", "minimumQuality": "frontier", "preferEntitlement": "any", "reasoning": "high",
+      "constraints": ["different-model-family-from-implementer", "exact-candidate-revision"],
+      "candidates": [
+        {"harness": "codex", "model": "gpt-5.6-sol"},
+        {"harness": "claude", "model": "claude-opus-5"},
+        {"harness": "omp", "model": "zai/glm-5.3"},
+        {"harness": "opencode", "model": "opencode-go/glm-5.3"},
+        {"harness": "pi", "model": "zai/glm-5.3"}
+      ],
+      "fallback": null
+    },
+    {
+      "id": "repair", "minimumQuality": "frontier", "preferEntitlement": "any", "reasoning": "xhigh",
+      "constraints": [],
+      "candidates": [
+        {"harness": "codex", "model": "gpt-5.6-sol"},
+        {"harness": "claude", "model": "claude-opus-5"}
+      ],
+      "fallback": null
+    }
+  ],
+  "escalation": {"afterReviewRounds": 2, "nextRole": "implementation.high"}
+}

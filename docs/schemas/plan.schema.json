@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noise.invalid/sdlc/plan.schema.json",
+  "title": "noise sdlc deterministic adoption plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "inputs", "causes", "recommendation", "alternatives", "files", "warnings"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "inputs": {
+      "type": "object", "additionalProperties": false,
+      "required": ["catalog", "catalogDigest", "seed", "seedDigest", "executionTemplate", "executionTemplateDigest", "answersDigest", "projectFactsDigest", "inventoryDigest"],
+      "properties": {
+        "catalog": {"type": "string"}, "catalogDigest": {"$ref": "#/$defs/digest"}, "seed": {"type": "string"}, "seedDigest": {"$ref": "#/$defs/digest"},
+        "executionTemplate": {"type": "string"}, "executionTemplateDigest": {"$ref": "#/$defs/digest"}, "answersDigest": {"$ref": "#/$defs/digest"},
+        "projectFactsDigest": {"$ref": "#/$defs/digest"}, "inventoryDigest": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "causes": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["source", "key", "value"], "properties": {"source": {"enum": ["observed", "operator-declared", "unknown"]}, "key": {"type": "string"}, "value": {"type": ["string", "boolean", "integer", "null"]}}}},
+    "recommendation": {"$ref": "#/$defs/recommendation"},
+    "alternatives": {"type": "array", "maxItems": 2, "items": {"$ref": "#/$defs/alternative"}},
+    "files": {"type": "array", "items": {"$ref": "#/$defs/file"}},
+    "warnings": {"type": "array", "minItems": 2, "items": {"type": "string"}}
+  },
+  "$defs": {
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "binding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["role", "status", "harness", "model", "modelFamily", "reasoning", "provenance", "fallback", "constraints", "reasons"],
+      "properties": {
+        "role": {"type": "string"}, "status": {"enum": ["resolved", "unresolved"]}, "harness": {"type": ["string", "null"]}, "model": {"type": ["string", "null"]},
+        "modelFamily": {"type": ["string", "null"]}, "reasoning": {"type": ["string", "null"]}, "provenance": {"enum": ["enumerated", "operator-declared", "unknown"]},
+        "fallback": {"type": ["string", "null"]}, "constraints": {"type": "array", "items": {"type": "string"}}, "reasons": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "recommendation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["seed", "executionTemplate", "ruleIds", "unresolved", "bindings", "escalateAfterReviewRounds"],
+      "properties": {
+        "seed": {"type": "string"}, "executionTemplate": {"type": "string"}, "ruleIds": {"type": "array", "items": {"type": "string"}},
+        "unresolved": {"type": "array", "items": {"type": "string"}}, "bindings": {"type": "array", "items": {"$ref": "#/$defs/binding"}},
+        "escalateAfterReviewRounds": {"type": "integer", "minimum": 1}
+      }
+    },
+    "alternative": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "tradeoff", "changedBindings"],
+      "properties": {"id": {"type": "string"}, "tradeoff": {"type": "string"}, "changedBindings": {"type": "array", "items": {"$ref": "#/$defs/binding"}}}
+    },
+    "file": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "action", "mode", "contentDigest", "rollback"],
+      "properties": {
+        "path": {"type": "string", "pattern": "^(AGENTS\\.md|BOOTSTRAP\\.md|SDLC\\.md|\\.sdlc/[a-z0-9-]+(?:\\.[a-z0-9-]+)*(?:/[a-z0-9-]+(?:\\.[a-z0-9-]+)*)*)$"}, "action": {"enum": ["create", "replace", "update-managed-block", "consume-bootstrap", "consume-bootstrap-receipt"]},
+        "mode": {"const": "0644"}, "contentDigest": {"$ref": "#/$defs/digest"}, "rollback": {"enum": ["remove", "restore"]}
+      }
+    }
+  }
+}

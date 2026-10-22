@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noise.invalid/sdlc/diagnosis.schema.json",
+  "title": "Read-only SDLC specialist compatibility diagnosis",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "sdlcVersion", "kind", "integrity", "deliveryReadiness", "diagnostics"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "sdlcVersion": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "kind": {"const": "noise.sdlc.diagnosis"},
+    "integrity": {"enum": ["verified", "not-adopted", "repair-required", "unknown"]},
+    "deliveryReadiness": {"const": "not-assessed"},
+    "runtimeObservedAt": {"type": "string", "format": "date-time"},
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["code", "status", "owner", "scope", "remediation"],
+        "properties": {
+          "code": {"type": "string", "pattern": "^[a-z][a-z0-9-]+$"},
+          "status": {"enum": ["action-required", "unknown", "compatible", "not-assessed", "not-observed"]},
+          "owner": {"enum": ["noise sdlc", "noise tasks", "noise review", "Deck", "project"]},
+          "scope": {"type": "string", "minLength": 1},
+          "remediation": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

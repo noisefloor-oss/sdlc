@@ -1,0 +1,31 @@
+#!/bin/sh
+set -eu
+
+repository_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+. "$repository_root/bin/launcher-common.sh"
+if ! go_command=$(sdlc_go_command); then
+    echo "noise-sdlc: Go 1.26.10 is required to build the prebuilt binary" >&2
+    exit 2
+fi
+build_directory=$(mktemp -d "$repository_root/bin/.noise-sdlc-build.XXXXXX")
+trap sdlc_cleanup EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+if ! source_digest=$(sdlc_source_digest); then
+    echo "noise-sdlc: cannot fingerprint source inputs; sha256sum or shasum is required" >&2
+    exit 2
+fi
+(cd "$repository_root" && "$go_command" build -o "$build_directory/noise-sdlc" ./cmd/noise-sdlc)
+if ! after_digest=$(sdlc_source_digest) || [ "$after_digest" != "$source_digest" ]; then
+    echo "noise-sdlc: source changed during the build; no prebuilt published, retry the build" >&2
+    exit 2
+fi
+binary_hash=$(sdlc_hash_file "$build_directory/noise-sdlc")
+printf 'noise-sdlc-prebuilt-v1\n%s\n%s\n' "$source_digest" "${binary_hash%% *}" > "$build_directory/receipt"
+# Each rename is atomic. Readers verify both digests and therefore reject a
+# mixed pair if another build or an interruption lands between the renames.
+mv -f -- "$build_directory/noise-sdlc" "$repository_root/bin/noise-sdlc-go"
+mv -f -- "$build_directory/receipt" "$repository_root/bin/noise-sdlc-go.receipt"
+printf '%s\n' "Built bin/noise-sdlc-go with a source freshness receipt."

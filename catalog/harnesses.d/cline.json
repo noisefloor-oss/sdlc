@@ -1,0 +1,24 @@
+{
+  "id": "cline",
+  "executable": "cline",
+  "versionProbe": {"argv": ["cline", "--version"], "timeoutSeconds": 5, "format": "lines", "source": "static"},
+  "versionPattern": "^(?P<version>[0-9]+\\.[0-9]+\\.[0-9]+)$",
+  "enumerationProbe": null,
+  "isolation": "harness-permissions",
+  "ranges": [{
+    "minimum": "3.0.55",
+    "maximumExclusive": "3.0.56",
+    "status": "experimental",
+    "capabilities": ["noninteractive", "structured-output", "reasoning-level", "resume", "permission-boundary"],
+    "reasoningLevels": ["low", "medium", "high", "xhigh"],
+    "run": ["cline", "--json", "--auto-approve", "false", "--model", "{model}", "--thinking", "{reasoning}", "--cwd", "{workspace}", "{prompt}"],
+    "modelFlag": "--model",
+    "reasoningFlag": "--thinking",
+    "structuredOutput": "--json",
+    "certification": {"schema": false, "argv": false, "fakeCli": false, "resolver": false, "live": "missing", "deck": "missing", "testedVersions": [], "certifiedAt": null, "resultDigest": null}
+  }],
+  "models": [
+    {"id": "anthropic/claude-sonnet-4.6", "modelFamily": "anthropic-claude-4.6", "qualityTier": "balanced", "entitlement": "unknown", "reasoningLevels": ["low", "medium", "high", "xhigh"], "status": "experimental"}
+  ],
+  "sources": ["https://docs.cline.bot/cli/cli-reference", "https://www.npmjs.com/package/cline"]
+}

@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "id": "noise/agent@0.1",
+  "title": "Noise agent delivery seed",
+  "rules": [
+    {
+      "id": "noise.agent.authority.requirements",
+      "title": "Name authoritative requirements",
+      "requirement": "The accepted product proposal or specification is authoritative; accepted ADRs record later durable decisions. Derived task state and generated policy do not override either.",
+      "applicability": "all-work", "assurance": "manual", "owner": null, "contract": null, "critical": true,
+      "evidence": ["PROPOSAL.md: ground-truth ordering", "docs/adr/0001-compiled-effective-policy.md: one effective policy"]
+    },
+    {
+      "id": "noise.agent.work.bounded-task",
+      "title": "Keep one bounded leaf active",
+      "requirement": "Represent implementation work in noise tasks and keep only one independently verifiable leaf task in progress.",
+      "applicability": "change-delivery", "assurance": "provider", "owner": "noise tasks", "contract": "backlog-integrity", "critical": false,
+      "evidence": ["PROPOSAL.md: recurring Noise delivery spine", "AGENTS.md: bounded leaf agreement"]
+    },
+    {
+      "id": "noise.agent.change.one-idea",
+      "title": "Deliver one coherent change",
+      "requirement": "Use a short-lived branch for one coherent idea and squash-merge its reviewed pull request.",
+      "applicability": "change-delivery", "assurance": "project", "owner": "project Git workflow", "contract": "project-git-workflow", "critical": false,
+      "evidence": ["PROPOSAL.md: recurring Noise delivery spine"]
+    },
+    {
+      "id": "noise.agent.checks.deterministic",
+      "title": "Run deterministic candidate checks",
+      "requirement": "Run the project-owned deterministic checks against the exact candidate revision before requesting formal review.",
+      "applicability": "change-delivery", "assurance": "project", "owner": "project check command", "contract": "project-check-command", "critical": true,
+      "evidence": ["PROPOSAL.md: deterministic candidate checks", "docs/adr/0004-deck-aware-execution-profiles.md: exact contract evidence"]
+    },
+    {
+      "id": "noise.agent.review.exact-head-independent",
+      "title": "Require independent exact-head review",
+      "requirement": "Agent-authored work requires formal review of the exact candidate revision by an approved high-capability model from a different model family than the implementer.",
+      "applicability": "agent-authored", "assurance": "provider", "owner": "noise review", "contract": "exact-head-independent-review", "critical": true,
+      "evidence": ["PROPOSAL.md: recurring Noise delivery spine", "docs/adr/0004-deck-aware-execution-profiles.md: independence constraints"]
+    },
+    {
+      "id": "noise.agent.review.visible-current",
+      "title": "Keep review visible and current",
+      "requirement": "Formal review must use an auditable project surface; a changed candidate invalidates prior approval and unresolved review threads block completion.",
+      "applicability": "agent-authored", "assurance": "provider", "owner": "noise review", "contract": "review-history-and-invalidation", "critical": true,
+      "evidence": ["PROPOSAL.md: invisible-review incident and visible history"]
+    },
+    {
+      "id": "noise.agent.authority.external-effects",
+      "title": "Stop for external authority",
+      "requirement": "Credentials, spend, deployment, publication, remote creation, repository settings, package publication, and other external effects require explicit human authority.",
+      "applicability": "external-effects", "assurance": "manual", "owner": null, "contract": null, "critical": true,
+      "evidence": ["PROPOSAL.md: product boundary", "AGENTS.md: explicit operator authorization"]
+    },
+    {
+      "id": "noise.agent.evidence.runtime-visual",
+      "title": "Use the evidence that can prove the claim",
+      "requirement": "When deterministic checks cannot prove runtime or visual behavior, obtain evidence from the specialist runtime or visual owner without treating lifecycle integrity as that evidence.",
+      "applicability": "non-deterministic-claims", "assurance": "provider", "owner": "project evidence owner", "contract": "project-declared-runtime-or-visual-contract", "critical": false,
+      "evidence": ["PROPOSAL.md: specialist tool ownership", "docs/adr/0001-compiled-effective-policy.md: integrity is not conformance"]
+    },
+    {
+      "id": "noise.agent.hygiene.sensitive-data",
+      "title": "Keep sensitive data out of artifacts",
+      "requirement": "Do not inspect, store, commit, log, or transmit credentials, authentication output, environment values, private transcripts, or hidden reasoning.",
+      "applicability": "all-work", "assurance": "manual", "owner": null, "contract": null, "critical": true,
+      "evidence": ["PROPOSAL.md: privacy boundary", "AGENTS.md: workspace hygiene"]
+    },
+    {
+      "id": "noise.agent.ownership.honest",
+      "title": "Name enforcement owners honestly",
+      "requirement": "Every gate names its provider, project command, manual judgment, or advisory status; noise sdlc verifies only its managed artifact integrity.",
+      "applicability": "all-work", "assurance": "manual", "owner": null, "contract": null, "critical": true,
+      "evidence": ["PROPOSAL.md: rule classifications", "docs/adr/0001-compiled-effective-policy.md: specialist ownership"]
+    }
+  ]
+}

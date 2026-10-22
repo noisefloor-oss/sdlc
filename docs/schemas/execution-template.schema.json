@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noise.invalid/sdlc/execution-template.schema.json",
+  "title": "noise sdlc execution template",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "roles", "escalation"],
+  "properties": {
+    "schemaVersion": {"const": 1}, "id": {"type": "string"},
+    "roles": {"type": "array", "items": {"$ref": "#/$defs/role"}},
+    "escalation": {"type": "object", "additionalProperties": false, "required": ["afterReviewRounds", "nextRole"], "properties": {"afterReviewRounds": {"const": 2}, "nextRole": {"const": "implementation.high"}}}
+  },
+  "$defs": {
+    "role": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "minimumQuality", "preferEntitlement", "reasoning", "constraints", "candidates", "fallback"],
+      "properties": {
+        "id": {"enum": ["implementation.bulk", "implementation.standard", "implementation.high", "review.formal", "repair"]},
+        "minimumQuality": {"enum": ["economy", "balanced", "frontier"]}, "preferEntitlement": {"enum": ["included", "metered", "any"]},
+        "reasoning": {"enum": ["off", "minimal", "low", "medium", "high", "xhigh", "max"]}, "constraints": {"type": "array", "items": {"enum": ["different-model-family-from-implementer", "exact-candidate-revision", "external-isolation"]}},
+        "candidates": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["harness", "model"], "properties": {"harness": {"type": "string"}, "model": {"type": "string"}}}},
+        "fallback": {"type": ["string", "null"]}
+      }
+    }
+  }
+}

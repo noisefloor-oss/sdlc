@@ -1,0 +1,391 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noise.invalid/sdlc/evidence.schema.json",
+  "title": "noise sdlc canary evidence v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "canary", "adoption", "policy", "ownership", "integrity", "update", "outcomes", "inventory", "routing", "compatibility", "operations", "privacyReviewed"],
+  "properties": {
+    "schemaVersion": {"const": 2},
+    "canary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "status"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
+        "kind": {"enum": ["self", "new-project", "established-project"]},
+        "status": {"enum": ["planned", "adopted", "updated", "complete"]}
+      }
+    },
+    "adoption": {"$ref": "#/$defs/adoption"},
+    "policy": {"$ref": "#/$defs/policy"},
+    "ownership": {"$ref": "#/$defs/ownership"},
+    "integrity": {"$ref": "#/$defs/integrity"},
+    "update": {"$ref": "#/$defs/update"},
+    "outcomes": {"$ref": "#/$defs/outcomes"},
+    "inventory": {"$ref": "#/$defs/inventory"},
+    "routing": {"oneOf": [{"$ref": "#/$defs/routeList"}, {"$ref": "#/$defs/unknown"}]},
+    "compatibility": {"$ref": "#/$defs/compatibility"},
+    "operations": {"$ref": "#/$defs/operationalMeasures"},
+    "privacyReviewed": {"const": true}
+  },
+  "$defs": {
+    "count": {"oneOf": [{"type": "integer", "minimum": 0}, {"enum": ["unknown", "not-applicable"]}]},
+    "unknown": {"enum": ["unknown", "not-applicable"]},
+    "notes": {"oneOf": [{"type": "array", "items": {"type": "string", "minLength": 1, "maxLength": 280}}, {"$ref": "#/$defs/unknown"}]},
+    "adoption": {
+      "type": "object", "additionalProperties": false,
+      "required": ["elapsedMinutes", "questionsAsked", "recommendation", "overrideCount", "notes"],
+      "properties": {
+        "elapsedMinutes": {"$ref": "#/$defs/count"}, "questionsAsked": {"$ref": "#/$defs/count"},
+        "recommendation": {"enum": ["accepted", "adjusted", "rejected", "unknown", "not-applicable"]}, "overrideCount": {"$ref": "#/$defs/count"}, "notes": {"$ref": "#/$defs/notes"}
+      }
+    },
+    "policy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["acceptedRuleIds", "movedLocalRuleIds", "removedRuleIds", "localRuleCount", "conflictCount"],
+      "properties": {
+        "acceptedRuleIds": {"$ref": "#/$defs/stringList"},
+        "movedLocalRuleIds": {"$ref": "#/$defs/stringList"},
+        "removedRuleIds": {"$ref": "#/$defs/stringList"},
+        "localRuleCount": {"$ref": "#/$defs/count"}, "conflictCount": {"$ref": "#/$defs/count"}
+      }
+    },
+    "ownership": {
+      "type": "object", "additionalProperties": false,
+      "required": ["toolReferences", "actionableReferences", "authorityConfusion"],
+      "properties": {"toolReferences": {"$ref": "#/$defs/count"}, "actionableReferences": {"$ref": "#/$defs/count"}, "authorityConfusion": {"$ref": "#/$defs/notes"}}
+    },
+    "integrity": {
+      "type": "object", "additionalProperties": false,
+      "required": ["driftFindings", "falsePositives"],
+      "properties": {"driftFindings": {"$ref": "#/$defs/count"}, "falsePositives": {"$ref": "#/$defs/count"}}
+    },
+    "update": {
+      "type": "object", "additionalProperties": false,
+      "required": ["attempted", "elapsedMinutes", "conflicts", "localRulesPreserved", "rollback"],
+      "properties": {
+        "attempted": {"oneOf": [{"type": "boolean"}, {"$ref": "#/$defs/unknown"}]}, "elapsedMinutes": {"$ref": "#/$defs/count"}, "conflicts": {"$ref": "#/$defs/count"},
+        "localRulesPreserved": {"enum": ["yes", "no", "unknown", "not-applicable"]}, "rollback": {"enum": ["passed", "failed", "unknown", "not-applicable", "not-tested"]}
+      }
+    },
+    "outcomes": {
+      "type": "object", "additionalProperties": false,
+      "required": ["prevented", "missed"],
+      "properties": {"prevented": {"$ref": "#/$defs/notes"}, "missed": {"$ref": "#/$defs/notes"}}
+    },
+    "inventory": {
+      "type": "object", "additionalProperties": false,
+      "required": ["installed", "matched", "unverified", "enumeratedCapabilities", "unknownCapabilities", "probeFailures"],
+      "properties": {
+        "installed": {"$ref": "#/$defs/count"}, "matched": {"$ref": "#/$defs/count"}, "unverified": {"$ref": "#/$defs/count"},
+        "enumeratedCapabilities": {"$ref": "#/$defs/count"}, "unknownCapabilities": {"$ref": "#/$defs/count"}, "probeFailures": {"$ref": "#/$defs/count"}
+      }
+    },
+    "route": {
+      "type": "object", "additionalProperties": false,
+      "required": ["role", "recommendation", "selection", "adequacy", "escalations"],
+      "properties": {
+        "role": {"enum": ["implementation.bulk", "implementation.standard", "implementation.high", "review.formal", "repair"]},
+        "recommendation": {"oneOf": [{"type": "string", "minLength": 1, "not": {"enum": ["unknown", "not-applicable"]}}, {"$ref": "#/$defs/unknown"}]},
+        "selection": {"oneOf": [{"type": "string", "minLength": 1, "not": {"enum": ["unknown", "not-applicable"]}}, {"$ref": "#/$defs/unknown"}]},
+        "adequacy": {"enum": ["adequate", "inadequate", "unknown", "not-used"]},
+        "escalations": {"oneOf": [{"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["afterRound", "destination", "converged"], "properties": {"afterRound": {"type": "integer", "minimum": 1}, "destination": {"type": "string"}, "converged": {"enum": ["yes", "no", "unknown"]}}}}, {"$ref": "#/$defs/unknown"}]}
+      }
+    },
+    "routeList": {
+      "type": "array", "minItems": 5, "maxItems": 5, "items": {"$ref": "#/$defs/route"},
+      "allOf": [
+        {"contains": {"properties": {"role": {"const": "implementation.bulk"}}, "required": ["role"]}, "minContains": 1, "maxContains": 1},
+        {"contains": {"properties": {"role": {"const": "implementation.standard"}}, "required": ["role"]}, "minContains": 1, "maxContains": 1},
+        {"contains": {"properties": {"role": {"const": "implementation.high"}}, "required": ["role"]}, "minContains": 1, "maxContains": 1},
+        {"contains": {"properties": {"role": {"const": "review.formal"}}, "required": ["role"]}, "minContains": 1, "maxContains": 1},
+        {"contains": {"properties": {"role": {"const": "repair"}}, "required": ["role"]}, "minContains": 1, "maxContains": 1}
+      ]
+    },
+    "stringList": {"oneOf": [{"type": "array", "items": {"type": "string"}, "uniqueItems": true}, {"$ref": "#/$defs/unknown"}]},
+    "compatibility": {
+      "type": "object", "additionalProperties": false,
+      "required": ["argumentDrift", "staleCatalogFacts", "deckGaps"],
+      "properties": {"argumentDrift": {"$ref": "#/$defs/notes"}, "staleCatalogFacts": {"$ref": "#/$defs/notes"}, "deckGaps": {"$ref": "#/$defs/notes"}}
+    },
+    "sourceId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]*$"
+    },
+    "sourceRefs": {
+      "type": "array",
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/sourceId"
+      }
+    },
+    "observationTime": {
+      "oneOf": [
+        {
+          "type": "string",
+          "format": "date-time",
+          "maxLength": 64,
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}[Tt][0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?([Zz]|[+-][0-9]{2}:[0-9]{2})$"
+        },
+        {
+          "$ref": "#/$defs/unknown"
+        }
+      ]
+    },
+    "operationalWindow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "end",
+        "cohort",
+        "coverage",
+        "inclusionRule"
+      ],
+      "properties": {
+        "start": {
+          "$ref": "#/$defs/observationTime"
+        },
+        "end": {
+          "$ref": "#/$defs/observationTime"
+        },
+        "cohort": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]*$"
+        },
+        "coverage": {
+          "enum": [
+            "complete",
+            "partial",
+            "unknown"
+          ]
+        },
+        "inclusionRule": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 280
+        }
+      }
+    },
+    "acceptedTaskDenominator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "unit",
+        "count",
+        "sourceRefs"
+      ],
+      "properties": {
+        "unit": {
+          "const": "accepted-task"
+        },
+        "count": {
+          "$ref": "#/$defs/count"
+        },
+        "sourceRefs": {
+          "$ref": "#/$defs/sourceRefs"
+        }
+      }
+    },
+    "interventionMeasures": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "avoidable",
+        "necessaryProductAuthority",
+        "unclassified",
+        "coverage",
+        "sourceRefs"
+      ],
+      "properties": {
+        "avoidable": {
+          "$ref": "#/$defs/count"
+        },
+        "necessaryProductAuthority": {
+          "$ref": "#/$defs/count"
+        },
+        "unclassified": {
+          "$ref": "#/$defs/count"
+        },
+        "coverage": {
+          "enum": [
+            "complete",
+            "partial",
+            "unknown"
+          ]
+        },
+        "sourceRefs": {
+          "$ref": "#/$defs/sourceRefs"
+        }
+      }
+    },
+    "timingMeasures": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "basis",
+        "elapsedMilliseconds",
+        "queueWaitMilliseconds",
+        "executionMilliseconds",
+        "humanDecisionWaitMilliseconds",
+        "unattributedMilliseconds",
+        "humanLaborMilliseconds",
+        "humanLaborMethod",
+        "sourceRefs"
+      ],
+      "properties": {
+        "basis": {
+          "const": "per-task-exclusive-elapsed-sum"
+        },
+        "elapsedMilliseconds": {
+          "$ref": "#/$defs/count"
+        },
+        "queueWaitMilliseconds": {
+          "$ref": "#/$defs/count"
+        },
+        "executionMilliseconds": {
+          "$ref": "#/$defs/count"
+        },
+        "humanDecisionWaitMilliseconds": {
+          "$ref": "#/$defs/count"
+        },
+        "unattributedMilliseconds": {
+          "$ref": "#/$defs/count"
+        },
+        "humanLaborMilliseconds": {
+          "$ref": "#/$defs/count"
+        },
+        "humanLaborMethod": {
+          "enum": [
+            "unknown",
+            "direct-observation",
+            "operator-report",
+            "not-applicable"
+          ]
+        },
+        "sourceRefs": {
+          "$ref": "#/$defs/sourceRefs"
+        }
+      }
+    },
+    "cleanupMeasures": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "observedAt",
+        "retainedWorkspaceBytes",
+        "unknownArtifactCount",
+        "sourceRefs"
+      ],
+      "properties": {
+        "scope": {
+          "const": "canary-owned-workspaces"
+        },
+        "observedAt": {
+          "$ref": "#/$defs/observationTime"
+        },
+        "retainedWorkspaceBytes": {
+          "$ref": "#/$defs/count"
+        },
+        "unknownArtifactCount": {
+          "$ref": "#/$defs/count"
+        },
+        "sourceRefs": {
+          "$ref": "#/$defs/sourceRefs"
+        }
+      }
+    },
+    "operationalSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "repositoryPath",
+        "revision"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/sourceId"
+        },
+        "kind": {
+          "enum": [
+            "artifact",
+            "owner-evidence",
+            "operator-report"
+          ]
+        },
+        "repositoryPath": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^(docs|evidence)/[A-Za-z0-9][A-Za-z0-9._-]*(/[A-Za-z0-9][A-Za-z0-9._-]*)*$"
+        },
+        "revision": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}$"
+            },
+            {
+              "const": "unknown"
+            }
+          ]
+        }
+      }
+    },
+    "operationalMeasures": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "window",
+        "denominator",
+        "interventions",
+        "timing",
+        "cleanup",
+        "sources",
+        "limitations"
+      ],
+      "properties": {
+        "window": {
+          "$ref": "#/$defs/operationalWindow"
+        },
+        "denominator": {
+          "$ref": "#/$defs/acceptedTaskDenominator"
+        },
+        "interventions": {
+          "$ref": "#/$defs/interventionMeasures"
+        },
+        "timing": {
+          "$ref": "#/$defs/timingMeasures"
+        },
+        "cleanup": {
+          "$ref": "#/$defs/cleanupMeasures"
+        },
+        "sources": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/operationalSource"
+          }
+        },
+        "limitations": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 280
+          }
+        }
+      }
+    }
+  }
+}

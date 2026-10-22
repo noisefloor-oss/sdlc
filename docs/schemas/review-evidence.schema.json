@@ -1,0 +1,427 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noise.invalid/sdlc/review-evidence.schema.json",
+  "title": "SDLC review policy comparison declarations",
+  "description": "Shape validation only: no observation authenticity, approval, or merge readiness is established.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "expectation",
+    "observations"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "expectation": {
+      "$ref": "#/$defs/expectation"
+    },
+    "observations": {
+      "$ref": "#/$defs/observations"
+    }
+  },
+  "$defs": {
+    "requestID": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+    },
+    "token": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/+-]*$"
+    },
+    "harness": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+    },
+    "repo": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 257,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*/[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "sha": {
+      "type": "string",
+      "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"
+    },
+    "currentSHA": {
+      "type": "string",
+      "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})?$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "evidenceRef": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/#@+-]*$",
+      "not": {
+        "pattern": "^[A-Za-z][A-Za-z0-9+.-]*://[^/]*@"
+      },
+      "description": "Caller-supplied public metadata locator, never opened; its existence and authenticity are not established."
+    },
+    "bot": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9-]*\\[bot\\]$"
+    },
+    "author": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9-]*(\\[bot\\])?$"
+    },
+    "uint64": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 18446744073709551615
+    },
+    "positiveID": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 18446744073709551615
+    },
+    "state": {
+      "enum": [
+        "APPROVED",
+        "CHANGES_REQUESTED",
+        "COMMENTED",
+        "DISMISSED",
+        "PENDING"
+      ]
+    },
+    "reviewer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "harness",
+        "version",
+        "model",
+        "modelFamily",
+        "reasoning"
+      ],
+      "properties": {
+        "harness": {
+          "$ref": "#/$defs/harness"
+        },
+        "version": {
+          "$ref": "#/$defs/version"
+        },
+        "model": {
+          "$ref": "#/$defs/token"
+        },
+        "modelFamily": {
+          "$ref": "#/$defs/token"
+        },
+        "reasoning": {
+          "$ref": "#/$defs/token"
+        }
+      }
+    },
+    "contributor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "harness",
+        "model",
+        "evidenceRef"
+      ],
+      "properties": {
+        "harness": {
+          "$ref": "#/$defs/harness"
+        },
+        "model": {
+          "$ref": "#/$defs/token"
+        },
+        "evidenceRef": {
+          "$ref": "#/$defs/evidenceRef"
+        }
+      }
+    },
+    "expectation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "requestID",
+        "repo",
+        "pr",
+        "baseSHA",
+        "headSHA",
+        "diffDigest",
+        "policyDigest",
+        "catalogDigest",
+        "reviewer",
+        "contributors",
+        "expectedBot",
+        "requireFullCoverage"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "requestID": {
+          "$ref": "#/$defs/requestID"
+        },
+        "repo": {
+          "$ref": "#/$defs/repo"
+        },
+        "pr": {
+          "$ref": "#/$defs/positiveID"
+        },
+        "baseSHA": {
+          "$ref": "#/$defs/sha"
+        },
+        "headSHA": {
+          "$ref": "#/$defs/sha"
+        },
+        "diffDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "policyDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "catalogDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "reviewer": {
+          "$ref": "#/$defs/reviewer"
+        },
+        "contributors": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "#/$defs/contributor"
+          }
+        },
+        "expectedBot": {
+          "$ref": "#/$defs/bot"
+        },
+        "requireFullCoverage": {
+          "const": true
+        }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requestID",
+        "baseSHA",
+        "headSHA",
+        "harness",
+        "version",
+        "requestedModel",
+        "requestedReasoning",
+        "effectiveModel",
+        "effectiveReasoning",
+        "evidenceRef"
+      ],
+      "properties": {
+        "requestID": {
+          "$ref": "#/$defs/requestID"
+        },
+        "baseSHA": {
+          "$ref": "#/$defs/sha"
+        },
+        "headSHA": {
+          "$ref": "#/$defs/sha"
+        },
+        "harness": {
+          "$ref": "#/$defs/harness"
+        },
+        "version": {
+          "$ref": "#/$defs/version"
+        },
+        "requestedModel": {
+          "$ref": "#/$defs/token"
+        },
+        "requestedReasoning": {
+          "$ref": "#/$defs/token"
+        },
+        "effectiveModel": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/token"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "effectiveReasoning": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/token"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "evidenceRef": {
+          "$ref": "#/$defs/evidenceRef"
+        }
+      }
+    },
+    "publication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requestID",
+        "repo",
+        "pr",
+        "reviewID",
+        "author",
+        "authorType",
+        "state",
+        "commitSHA",
+        "readbackRef"
+      ],
+      "properties": {
+        "requestID": {
+          "$ref": "#/$defs/requestID"
+        },
+        "repo": {
+          "$ref": "#/$defs/repo"
+        },
+        "pr": {
+          "$ref": "#/$defs/positiveID"
+        },
+        "reviewID": {
+          "$ref": "#/$defs/positiveID"
+        },
+        "author": {
+          "$ref": "#/$defs/author"
+        },
+        "authorType": {
+          "$ref": "#/$defs/token"
+        },
+        "state": {
+          "$ref": "#/$defs/state"
+        },
+        "commitSHA": {
+          "$ref": "#/$defs/sha"
+        },
+        "readbackRef": {
+          "$ref": "#/$defs/evidenceRef"
+        }
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requestID",
+        "baseSHA",
+        "headSHA",
+        "diffDigest",
+        "reviewedDiffDigest",
+        "full",
+        "truncated",
+        "reviewedComplete",
+        "unresolvedFindings",
+        "evidenceRef"
+      ],
+      "properties": {
+        "requestID": {
+          "$ref": "#/$defs/requestID"
+        },
+        "baseSHA": {
+          "$ref": "#/$defs/sha"
+        },
+        "headSHA": {
+          "$ref": "#/$defs/sha"
+        },
+        "diffDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "reviewedDiffDigest": {
+          "$ref": "#/$defs/digest"
+        },
+        "full": {
+          "type": "boolean"
+        },
+        "truncated": {
+          "type": "boolean"
+        },
+        "reviewedComplete": {
+          "type": "boolean"
+        },
+        "unresolvedFindings": {
+          "$ref": "#/$defs/uint64"
+        },
+        "evidenceRef": {
+          "$ref": "#/$defs/evidenceRef"
+        }
+      }
+    },
+    "audit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "state",
+        "author",
+        "author_type"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/positiveID"
+        },
+        "state": {
+          "$ref": "#/$defs/state"
+        },
+        "author": {
+          "$ref": "#/$defs/author"
+        },
+        "author_type": {
+          "$ref": "#/$defs/token"
+        }
+      }
+    },
+    "observations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "currentBaseSHA",
+        "currentHeadSHA"
+      ],
+      "properties": {
+        "currentBaseSHA": {
+          "$ref": "#/$defs/currentSHA"
+        },
+        "currentHeadSHA": {
+          "$ref": "#/$defs/currentSHA"
+        },
+        "execution": {
+          "$ref": "#/$defs/execution"
+        },
+        "publication": {
+          "$ref": "#/$defs/publication"
+        },
+        "coverage": {
+          "$ref": "#/$defs/coverage"
+        },
+        "audit": {
+          "$ref": "#/$defs/audit"
+        }
+      }
+    }
+  }
+}

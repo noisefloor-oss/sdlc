@@ -1,0 +1,26 @@
+{
+  "id": "mimo",
+  "executable": "mimo",
+  "versionProbe": {"argv": ["mimo", "--version"], "timeoutSeconds": 5, "format": "lines", "source": "static"},
+  "versionPattern": "^(?P<version>[0-9]+\\.[0-9]+\\.[0-9]+)$",
+  "enumerationProbe": null,
+  "isolation": "harness-permissions",
+  "ranges": [{
+    "minimum": "0.1.13",
+    "maximumExclusive": "0.1.14",
+    "status": "experimental",
+    "capabilities": ["noninteractive", "structured-output", "reasoning-level", "resume"],
+    "reasoningLevels": ["minimal", "low", "medium", "high", "max"],
+    "run": ["mimo", "run", "--pure", "--format", "json", "--model", "{model}", "--variant", "{reasoning}", "--dir", "{workspace}", "{prompt}"],
+    "modelFlag": "--model",
+    "reasoningFlag": "--variant",
+    "structuredOutput": "--format json",
+    "certification": {"schema": false, "argv": false, "fakeCli": false, "resolver": false, "live": "missing", "deck": "missing", "testedVersions": [], "certifiedAt": null, "resultDigest": null}
+  }],
+  "models": [
+    {"id": "mimo/mimo-auto", "modelFamily": "xiaomi-mimo", "qualityTier": "balanced", "entitlement": "unknown", "reasoningLevels": ["low", "medium", "high", "max"], "status": "experimental"},
+    {"id": "xiaomi/mimo-v2.5", "modelFamily": "xiaomi-mimo", "qualityTier": "balanced", "entitlement": "unknown", "reasoningLevels": ["low", "medium", "high", "max"], "status": "experimental"},
+    {"id": "xiaomi/mimo-v2.5-pro", "modelFamily": "xiaomi-mimo", "qualityTier": "frontier", "entitlement": "unknown", "reasoningLevels": ["high", "max"], "status": "experimental"}
+  ],
+  "sources": ["https://github.com/XiaomiMiMo/MiMo-Code"]
+}

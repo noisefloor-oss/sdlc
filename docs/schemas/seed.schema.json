@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noise.invalid/sdlc/seed.schema.json",
+  "title": "noise sdlc lifecycle seed",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "title", "rules"],
+  "properties": {
+    "schemaVersion": {"const": 1}, "id": {"type": "string"}, "title": {"type": "string"},
+    "rules": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/rule"}}
+  },
+  "$defs": {
+    "rule": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "title", "requirement", "applicability", "assurance", "owner", "contract", "critical", "evidence"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^noise\\.agent\\.[a-z0-9.-]+$"}, "title": {"type": "string"}, "requirement": {"type": "string"},
+        "applicability": {"enum": ["all-work", "agent-authored", "change-delivery", "external-effects", "non-deterministic-claims"]},
+        "assurance": {"enum": ["provider", "project", "manual", "advisory"]}, "owner": {"type": ["string", "null"]}, "contract": {"type": ["string", "null"]},
+        "critical": {"type": "boolean"}, "evidence": {"type": "array", "minItems": 1, "items": {"type": "string"}}
+      },
+      "allOf": [
+        {"if": {"properties": {"assurance": {"enum": ["provider", "project"]}}, "required": ["assurance"]}, "then": {"properties": {"owner": {"type": "string", "minLength": 1}, "contract": {"type": "string", "minLength": 1}}}}
+      ]
+    }
+  }
+}

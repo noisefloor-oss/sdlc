@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.sdlc/inventory.json
+bin/noise-sdlc-go
+bin/noise-sdlc-go.receipt
+bin/.noise-sdlc-build.*/
