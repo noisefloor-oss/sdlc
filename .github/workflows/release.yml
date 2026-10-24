@@ -18,7 +18,7 @@ env:
 jobs:
   release:
     if: github.repository == 'noisefloor-oss/sdlc'
-    runs-on: ubuntu-24.04
+    runs-on: [self-hosted, Linux, ARM64]
     permissions:
       contents: write
     steps:
@@ -41,10 +41,12 @@ jobs:
       matrix:
         include:
           - os: ubuntu-24.04
+            runner: [self-hosted, Linux, X64, ubuntu-24.04]
             arch: amd64
           - os: ubuntu-24.04-arm
+            runner: [self-hosted, Linux, ARM64]
             arch: arm64
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.runner }}
     env:
       GOOS: linux
       GOARCH: ${{ matrix.arch }}
@@ -85,7 +87,7 @@ jobs:
     if: github.repository == 'noisefloor-oss/sdlc'
     # Asset publication waits for every architecture to build and pass smoke checks.
     needs: build
-    runs-on: ubuntu-24.04
+    runs-on: [self-hosted, Linux, ARM64]
     permissions:
       contents: write
     steps:
