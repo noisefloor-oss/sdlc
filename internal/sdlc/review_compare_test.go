@@ -34,7 +34,7 @@ func reviewComparisonFixture(t *testing.T) (Catalog, ReviewExpectation, ReviewOb
 		DiffDigest: DigestBytes([]byte("entire candidate diff")), PolicyDigest: DigestBytes([]byte("effective policy")), CatalogDigest: catalogDigest,
 		Reviewer:     ReviewReviewerBinding{Harness: "omp", Version: "18.1.11", Model: "zai/glm-5.3", ModelFamily: "zai-glm-5.3", Reasoning: "high"},
 		Contributors: []ReviewContributor{{Harness: "codex", Model: "gpt-5.6-sol", EvidenceRef: "https://example.invalid/contributions/initial"}},
-		ExpectedBot:  "diff-guard[bot]", RequireFullCoverage: true,
+		ExpectedBot:  "noise-review[bot]", RequireFullCoverage: true,
 	}
 	observations := ReviewObservations{
 		CurrentBaseSHA: expectation.BaseSHA, CurrentHeadSHA: expectation.HeadSHA,
@@ -86,7 +86,7 @@ func TestCompareReviewEvidenceMatchIsOnlyDeclarationConsistency(t *testing.T) {
 	assertReviewComparisonBoundary(t, result)
 	// No audit is required when request-bound owner readback is supplied. Neither
 	// that readback nor an actor's final audit is treated as authenticated here.
-	observations.Audit = &InvocationAudit{ID: 123, State: "APPROVED", Author: "diff-guard[bot]", AuthorType: "Bot"}
+	observations.Audit = &InvocationAudit{ID: 123, State: "APPROVED", Author: "noise-review[bot]", AuthorType: "Bot"}
 	withAudit, err := CompareReviewEvidence(catalog, expectation, observations)
 	if err != nil || !reflect.DeepEqual(result, withAudit) {
 		t.Fatalf("matching audit changed policy comparison: %#v, %v", withAudit, err)
@@ -282,7 +282,7 @@ func TestCompareReviewEvidenceAuditCannotOverrideOwnerReadback(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			catalog, expectation, observations := reviewComparisonFixture(t)
-			observations.Audit = &InvocationAudit{ID: 123, State: "APPROVED", Author: "diff-guard[bot]", AuthorType: "Bot"}
+			observations.Audit = &InvocationAudit{ID: 123, State: "APPROVED", Author: "noise-review[bot]", AuthorType: "Bot"}
 			tc.edit(&observations)
 			result, err := CompareReviewEvidence(catalog, expectation, observations)
 			if err != nil || result.Status != "mismatch" || !contains(result.Reasons, tc.reason) {
@@ -294,7 +294,7 @@ func TestCompareReviewEvidenceAuditCannotOverrideOwnerReadback(t *testing.T) {
 	// A plausible final audit after an interrupted or uncertain execution still
 	// requires effective settings and request-bound publication readback.
 	catalog, expectation, observations := reviewComparisonFixture(t)
-	observations.Audit = &InvocationAudit{ID: 123, State: "APPROVED", Author: "diff-guard[bot]", AuthorType: "Bot"}
+	observations.Audit = &InvocationAudit{ID: 123, State: "APPROVED", Author: "noise-review[bot]", AuthorType: "Bot"}
 	observations.Execution.EffectiveModel, observations.Execution.EffectiveReasoning = nil, nil
 	observations.Publication = nil
 	result, err := CompareReviewEvidence(catalog, expectation, observations)
