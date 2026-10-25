@@ -93,7 +93,7 @@ func TestExecutionRoleGuidancePreservesVersionAndRoute(t *testing.T) {
 		t.Fatal("substituted unrecognized version")
 	}
 	binding.Harness, binding.Model, binding.ModelFamily = stringPointer("codex"), stringPointer("gpt-5.6-sol"), stringPointer("openai-gpt-5.6")
-	if got := executionRoleGuidance(catalog, binding, ""); got["state"] != "unsupported" {
+	if got := executionRoleGuidance(catalog, binding, "0.147.0"); got["state"] != "unsupported" {
 		t.Fatal("substituted unsupported Codex route")
 	}
 	binding.Harness, binding.Model, binding.ModelFamily = stringPointer("claude"), stringPointer("claude-opus-5"), stringPointer("incorrect-family")

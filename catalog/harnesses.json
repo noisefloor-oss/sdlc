@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "catalog": "noise/harnesses@0.5",
+  "catalog": "noise/harnesses@0.6",
   "harnesses": [
     {
       "id": "codex", "executable": "codex",
@@ -15,7 +15,143 @@
         "run": ["codex", "exec", "--ephemeral", "--json", "--model", "{model}", "--config", "model_reasoning_effort=\"{reasoning}\"", "--cd", "{workspace}", "{prompt}"],
         "modelFlag": "--model", "reasoningFlag": "--config model_reasoning_effort", "structuredOutput": "--json",
         "certification": {"schema": false, "argv": false, "fakeCli": false, "resolver": false, "live": "missing", "deck": "missing", "testedVersions": [], "certifiedAt": null, "resultDigest": null}
-      }],
+      },
+        {
+          "minimum": "0.162.1",
+          "maximumExclusive": "0.162.2",
+          "status": "experimental",
+          "capabilities": [
+            "noninteractive",
+            "reasoning-level",
+            "ephemeral-session",
+            "resume",
+            "permission-boundary",
+            "model-enumeration"
+          ],
+          "reasoningLevels": [
+            "minimal",
+            "low",
+            "medium",
+            "high",
+            "xhigh"
+          ],
+          "run": [
+            "codex",
+            "exec",
+            "--ephemeral",
+            "--model",
+            "{model}",
+            "--config",
+            "{reasoningConfig}",
+            "--sandbox",
+            "workspace-write",
+            "--color",
+            "never",
+            "-"
+          ],
+          "modelFlag": "--model",
+          "reasoningFlag": "--config model_reasoning_effort",
+          "structuredOutput": null,
+          "certification": {
+            "schema": false,
+            "argv": false,
+            "fakeCli": false,
+            "resolver": false,
+            "live": "missing",
+            "deck": "missing",
+            "testedVersions": [],
+            "certifiedAt": null,
+            "resultDigest": null
+          },
+          "invocation": {
+            "schemaVersion": 1,
+            "actions": {
+              "execution": {
+                "argv": [
+                  "codex",
+                  "exec",
+                  "--ephemeral",
+                  "--model",
+                  "{model}",
+                  "--config",
+                  "{reasoningConfig}",
+                  "--sandbox",
+                  "workspace-write",
+                  "--color",
+                  "never",
+                  "-"
+                ],
+                "workingDirectory": "process-cwd",
+                "prompt": {
+                  "transport": "stdin-text",
+                  "maxBytes": 262144
+                },
+                "permissions": {
+                  "mode": "harness-policy",
+                  "externalBoundary": "required",
+                  "limitations": [
+                    "workspace-write is a harness policy, not proof of isolation.",
+                    "The runner must enforce authorized filesystem, network, tool and publication effects."
+                  ]
+                },
+                "output": {
+                  "normalizer": "final-text-v1",
+                  "maxBytes": 1048576
+                },
+                "completion": {
+                  "successExitCode": 0,
+                  "requiresFinalOutput": true,
+                  "taskCompletion": "not-established"
+                }
+              },
+              "review": {
+                "argv": [
+                  "codex",
+                  "exec",
+                  "--ephemeral",
+                  "--model",
+                  "{model}",
+                  "--config",
+                  "{reasoningConfig}",
+                  "--sandbox",
+                  "workspace-write",
+                  "--color",
+                  "never",
+                  "-"
+                ],
+                "workingDirectory": "process-cwd",
+                "prompt": {
+                  "transport": "stdin-text",
+                  "maxBytes": 262144
+                },
+                "permissions": {
+                  "mode": "harness-policy",
+                  "externalBoundary": "required",
+                  "limitations": [
+                    "workspace-write is a harness policy, not proof of isolation.",
+                    "The runner must enforce authorized filesystem, network, tool and publication effects."
+                  ]
+                },
+                "output": {
+                  "normalizer": "final-text-v1",
+                  "maxBytes": 1048576
+                },
+                "completion": {
+                  "successExitCode": 0,
+                  "requiresFinalOutput": true,
+                  "taskCompletion": "not-established"
+                },
+                "publication": {
+                  "contract": "noise-review-v1",
+                  "actor": "reviewer",
+                  "requiresReadback": true,
+                  "auditRecord": "last-nonempty-line-json"
+                }
+              }
+            }
+          }
+        }
+      ],
       "models": [
         {"id": "gpt-5.6-sol", "modelFamily": "openai-gpt-5.6", "qualityTier": "frontier", "entitlement": "included", "reasoningLevels": ["low", "medium", "high", "xhigh"], "status": "experimental"},
         {"id": "gpt-5.6-terra", "modelFamily": "openai-gpt-5.6", "qualityTier": "balanced", "entitlement": "included", "reasoningLevels": ["low", "medium", "high", "xhigh"], "status": "experimental"},
@@ -173,7 +309,146 @@
               }
             }
           }
-        }],
+        },
+        {
+          "minimum": "2.1.310",
+          "maximumExclusive": "2.1.311",
+          "status": "experimental",
+          "capabilities": [
+            "noninteractive",
+            "reasoning-level",
+            "ephemeral-session",
+            "resume",
+            "read-only-tools",
+            "permission-boundary"
+          ],
+          "reasoningLevels": [
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "run": [
+            "claude",
+            "--print",
+            "--input-format",
+            "text",
+            "--output-format",
+            "text",
+            "--model",
+            "{model}",
+            "--effort",
+            "{reasoning}",
+            "--permission-mode",
+            "dontAsk",
+            "--no-session-persistence"
+          ],
+          "modelFlag": "--model",
+          "reasoningFlag": "--effort",
+          "structuredOutput": null,
+          "certification": {
+            "schema": false,
+            "argv": false,
+            "fakeCli": false,
+            "resolver": false,
+            "live": "missing",
+            "deck": "missing",
+            "testedVersions": [],
+            "certifiedAt": null,
+            "resultDigest": null
+          },
+          "invocation": {
+            "schemaVersion": 1,
+            "actions": {
+              "execution": {
+                "argv": [
+                  "claude",
+                  "--print",
+                  "--input-format",
+                  "text",
+                  "--output-format",
+                  "text",
+                  "--model",
+                  "{model}",
+                  "--effort",
+                  "{reasoning}",
+                  "--permission-mode",
+                  "dontAsk",
+                  "--no-session-persistence"
+                ],
+                "workingDirectory": "process-cwd",
+                "prompt": {
+                  "transport": "stdin-text",
+                  "maxBytes": 262144
+                },
+                "permissions": {
+                  "mode": "harness-policy",
+                  "externalBoundary": "required",
+                  "limitations": [
+                    "dontAsk is a harness permission policy, not a read-only filesystem boundary.",
+                    "The runner must enforce authorized filesystem and publication effects."
+                  ]
+                },
+                "output": {
+                  "normalizer": "final-text-v1",
+                  "maxBytes": 1048576
+                },
+                "completion": {
+                  "successExitCode": 0,
+                  "requiresFinalOutput": true,
+                  "taskCompletion": "not-established"
+                }
+              },
+              "review": {
+                "argv": [
+                  "claude",
+                  "--print",
+                  "--input-format",
+                  "text",
+                  "--output-format",
+                  "text",
+                  "--model",
+                  "{model}",
+                  "--effort",
+                  "{reasoning}",
+                  "--permission-mode",
+                  "dontAsk",
+                  "--no-session-persistence"
+                ],
+                "workingDirectory": "process-cwd",
+                "prompt": {
+                  "transport": "stdin-text",
+                  "maxBytes": 262144
+                },
+                "permissions": {
+                  "mode": "harness-policy",
+                  "externalBoundary": "required",
+                  "limitations": [
+                    "dontAsk is a harness permission policy, not a read-only filesystem boundary.",
+                    "The runner must enforce authorized filesystem and publication effects."
+                  ]
+                },
+                "output": {
+                  "normalizer": "final-text-v1",
+                  "maxBytes": 1048576
+                },
+                "completion": {
+                  "successExitCode": 0,
+                  "requiresFinalOutput": true,
+                  "taskCompletion": "not-established"
+                },
+                "publication": {
+                  "contract": "noise-review-v1",
+                  "actor": "reviewer",
+                  "requiresReadback": true,
+                  "auditRecord": "last-nonempty-line-json"
+                }
+              }
+            }
+          }
+        }
+      ],
       "models": [
         {"id": "claude-fable-5", "modelFamily": "anthropic-claude-5", "qualityTier": "frontier", "entitlement": "unknown", "reasoningLevels": ["low", "medium", "high", "xhigh", "max"], "status": "experimental"},
         {"id": "claude-opus-5", "modelFamily": "anthropic-claude-5", "qualityTier": "frontier", "entitlement": "unknown", "reasoningLevels": ["low", "medium", "high", "xhigh", "max"], "status": "experimental"},

@@ -63,11 +63,15 @@ func run(arguments []string) error {
 	}
 	switch arguments[0] {
 	case "list":
-		seed, err := sdlc.LoadSeed(root)
-		if err != nil {
-			return err
+		seeds := []map[string]any{}
+		for _, id := range sdlc.SupportedSeedIDs() {
+			seed, err := sdlc.LoadSeedVersion(root, id)
+			if err != nil {
+				return err
+			}
+			seeds = append(seeds, map[string]any{"id": seed.ID, "title": seed.Title, "default": id == sdlc.DefaultSeedID})
 		}
-		return emit(map[string]any{"seeds": []map[string]string{{"id": seed.ID, "title": seed.Title}}})
+		return emit(map[string]any{"seeds": seeds})
 	case "show":
 		return showSeed(root, arguments[1:])
 	case "harness":
@@ -152,16 +156,13 @@ func commandKnown(name string) bool {
 }
 
 func showSeed(root string, arguments []string) error {
-	seed, err := sdlc.LoadSeed(root)
-	if err != nil {
-		return err
-	}
-	requested := seed.ID
+	requested := sdlc.DefaultSeedID
 	if len(arguments) > 0 {
 		requested = arguments[0]
 	}
-	if requested != seed.ID {
-		return fmt.Errorf("unknown seed: %s", requested)
+	seed, err := sdlc.LoadSeedVersion(root, requested)
+	if err != nil {
+		return err
 	}
 	return emit(seed)
 }
@@ -532,7 +533,7 @@ func answersForCommand(path string) (sdlc.AnswersFile, error) {
 func defaultAnswers() sdlc.AnswersFile {
 	return sdlc.AnswersFile{
 		SchemaVersion:     1,
-		Seed:              "noise/agent@0.1",
+		Seed:              sdlc.DefaultSeedID,
 		ExecutionTemplate: sdlc.ExecutionTemplateID,
 		Answers: sdlc.Answers{
 			Authorship:        "agent",

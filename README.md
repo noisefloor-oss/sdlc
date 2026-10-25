@@ -44,7 +44,7 @@ noise-sdlc plan --target . --answers answers.json    # explained plan, writes no
 noise-sdlc adopt --target . --answers answers.json --yes
 # Adopted; managed artifact integrity verified.
 noise-sdlc verify --target .
-# { "integrity": "verified", "seed": "noise/agent@0.1", ... }
+# { "integrity": "verified", "seed": "noise/agent@0.2", ... }
 ```
 
 `adopt` writes a managed block in `AGENTS.md`, `SDLC.md`, and two files under
@@ -62,7 +62,7 @@ Give your coding agent this prompt:
 Requirements: Linux on x86-64 and Go 1.26.10 or newer.
 
 ```sh
-go install github.com/noisefloor-oss/sdlc/cmd/noise-sdlc@v0.4.0
+go install github.com/noisefloor-oss/sdlc/cmd/noise-sdlc@v0.4.1
 noise-sdlc --version
 ```
 

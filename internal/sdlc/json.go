@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 )
@@ -23,6 +24,9 @@ func decodeJSON(path string, data []byte, destination any) error {
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(destination); err != nil {
 		return fmt.Errorf("cannot read valid JSON from %s: %w", path, err)
+	}
+	if _, err := decoder.Token(); err != io.EOF {
+		return fmt.Errorf("cannot read valid JSON from %s: trailing data", path)
 	}
 	return nil
 }

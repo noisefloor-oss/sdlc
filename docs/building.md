@@ -5,7 +5,7 @@
 ```sh
 git clone https://github.com/noisefloor-oss/sdlc.git
 cd sdlc
-git checkout v0.4.0        # or the latest release tag
+git checkout v0.4.1        # or the latest release tag
 go build -o noise-sdlc ./cmd/noise-sdlc
 ./noise-sdlc --version     # verify the build runs
 ```

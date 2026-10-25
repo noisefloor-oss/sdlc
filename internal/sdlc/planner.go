@@ -35,7 +35,7 @@ type BuildResult struct {
 }
 
 func ValidateAnswers(answers AnswersFile) error {
-	if answers.SchemaVersion != 1 || answers.Seed != "noise/agent@0.1" || answers.ExecutionTemplate != ExecutionTemplateID {
+	if answers.SchemaVersion != 1 || !oneOf(answers.Seed, "noise/agent@0.1", DefaultSeedID) || answers.ExecutionTemplate != ExecutionTemplateID {
 		return fmt.Errorf("answers pin an unsupported version, seed, or execution template")
 	}
 	if !oneOf(answers.Answers.Authorship, "agent", "mixed", "human") {
@@ -217,7 +217,7 @@ func BuildPlan(target, root string, answers AnswersFile, inventory *Inventory) (
 	if err != nil {
 		return BuildResult{}, err
 	}
-	seed, err := LoadSeed(root)
+	seed, err := LoadSeedVersion(root, answers.Seed)
 	if err != nil {
 		return BuildResult{}, err
 	}
@@ -1165,12 +1165,13 @@ func repairReason(message string) string {
 }
 
 func shadowArtifacts(target string) []string {
+	worktrees := registeredNestedWorktrees(target)
 	var shadows []string
 	_ = filepath.WalkDir(target, func(path string, entry os.DirEntry, err error) error {
 		if err != nil {
 			return nil
 		}
-		if entry.IsDir() && (entry.Name() == ".git" || entry.Name() == "__pycache__") {
+		if entry.IsDir() && (entry.Name() == ".git" || entry.Name() == "__pycache__" || worktrees[filepath.Clean(path)]) {
 			return filepath.SkipDir
 		}
 		if entry.IsDir() {
@@ -1207,3 +1208,63 @@ func sameStringPointer(left, right *string) bool { return pointerValue(left) == 
 func pathExists(path string) bool                { _, err := os.Stat(path); return err == nil }
 func stringValue(value any) string               { result, _ := value.(string); return result }
 func intValue(value any) int                     { number, _ := value.(float64); return int(number) }
+
+// registeredNestedWorktrees excludes only reciprocal, same-repository Git
+// registrations. Missing Git or uncertain metadata leaves the scan unchanged.
+func registeredNestedWorktrees(target string) map[string]bool {
+	result := map[string]bool{}
+	environment := gitWorktreeEnvironment()
+	canonical, err := filepath.EvalSymlinks(target)
+	if err != nil {
+		return result
+	}
+	canonical, err = filepath.Abs(canonical)
+	if err != nil {
+		return result
+	}
+	identity, failure := runBoundedProbe(target, []string{"git", "rev-parse", "--path-format=absolute", "--git-common-dir"}, environment)
+	if failure != "" {
+		return result
+	}
+	common := strings.TrimSpace(string(identity))
+	listing, failure := runBoundedProbe(target, []string{"git", "worktree", "list", "--porcelain", "-z"}, environment)
+	if failure != "" {
+		return result
+	}
+	for _, field := range strings.Split(string(listing), "\x00") {
+		if !strings.HasPrefix(field, "worktree ") {
+			continue
+		}
+		path := strings.TrimPrefix(field, "worktree ")
+		relative, err := filepath.Rel(canonical, path)
+		if err != nil || relative == "." || relative == ".." || strings.HasPrefix(relative, ".."+string(filepath.Separator)) {
+			continue
+		}
+		marker, err := os.Lstat(filepath.Join(path, ".git"))
+		if err != nil || !marker.Mode().IsRegular() {
+			continue
+		}
+		candidate, failure := runBoundedProbe(path, []string{"git", "rev-parse", "--path-format=absolute", "--git-common-dir"}, environment)
+		if failure != "" || strings.TrimSpace(string(candidate)) != common {
+			continue
+		}
+		top, failure := runBoundedProbe(path, []string{"git", "rev-parse", "--show-toplevel"}, environment)
+		if failure != "" || strings.TrimSpace(string(top)) != path {
+			continue
+		}
+		result[filepath.Join(target, relative)] = true
+	}
+	return result
+}
+
+// Git hooks export repository selectors. Worktree discovery must use the
+// requested directory's metadata rather than the caller's Git context.
+func gitWorktreeEnvironment() []string {
+	environment := make([]string, 0)
+	for _, entry := range os.Environ() {
+		if !strings.HasPrefix(entry, "GIT_") {
+			environment = append(environment, entry)
+		}
+	}
+	return environment
+}

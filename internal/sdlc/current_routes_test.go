@@ -9,8 +9,8 @@ import (
 )
 
 func TestCurrentKimiAndGLMRoutesMatchCatalogContracts(t *testing.T) {
-	if Version != "0.4.0" {
-		t.Fatalf("public release must report version 0.4.0, got %q", Version)
+	if Version != "0.4.1" {
+		t.Fatalf("public release must report version 0.4.1, got %q", Version)
 	}
 	root, err := RepositoryRoot()
 	if err != nil {
@@ -20,7 +20,7 @@ func TestCurrentKimiAndGLMRoutesMatchCatalogContracts(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if catalog.Catalog != "noise/harnesses@0.5" {
+	if catalog.Catalog != "noise/harnesses@0.6" {
 		t.Fatalf("unexpected catalog id %q", catalog.Catalog)
 	}
 	template, err := LoadTemplate(root)

@@ -9,10 +9,14 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strings"
 	"time"
+
+	"golang.org/x/sys/unix"
 )
 
 var (
@@ -126,6 +130,8 @@ func ValidateDeckReceipt(receipt map[string]any) error {
 	return nil
 }
 
+const deckSyncReceiptRelative = ".sdlc/deck-sync.json"
+
 func AcceptDeckReceipt(receipt map[string]any, target string, catalog Catalog) (map[string]any, error) {
 	if err := ValidateDeckReceipt(receipt); err != nil {
 		return nil, err
@@ -134,7 +140,16 @@ func AcceptDeckReceipt(receipt map[string]any, target string, catalog Catalog) (
 	if err != nil {
 		return nil, err
 	}
-	if err := atomicWrite(filepath.Join(target, ".sdlc", "deck-sync.json"), encoded); err != nil {
+	absolute, err := filepath.Abs(target)
+	if err != nil {
+		return nil, err
+	}
+	root, err := os.OpenRoot(absolute)
+	if err != nil {
+		return nil, err
+	}
+	defer root.Close()
+	if err := writeManagedPath(root, absolute, deckSyncReceiptRelative, encoded); err != nil {
 		return nil, err
 	}
 	return DeckSyncStatus(target, catalog), nil
@@ -190,18 +205,92 @@ func isLoopbackDeckURL(parsed *url.URL) bool {
 		oneOf(parsed.Hostname(), "127.0.0.1", "::1", "localhost")
 }
 
+func readDeckReceipt(target string) (map[string]any, string, error) {
+	return readDeckReceiptWithHook(target, nil)
+}
+
+func readDeckReceiptWithHook(target string, beforeOpen func()) (map[string]any, string, error) {
+	absolute, err := filepath.Abs(target)
+	if err != nil {
+		return nil, "", err
+	}
+	receiptPath := filepath.Join(absolute, deckSyncReceiptRelative)
+	root, err := os.Open(absolute)
+	if err != nil {
+		return nil, receiptPath, err
+	}
+	defer root.Close()
+	if err := validateManagedPath(absolute, deckSyncReceiptRelative); err != nil {
+		return nil, receiptPath, err
+	}
+	if beforeOpen != nil {
+		beforeOpen()
+	}
+	file, err := openManagedFileNoFollow(root, deckSyncReceiptRelative)
+	if err != nil {
+		return nil, receiptPath, err
+	}
+	defer file.Close()
+	info, err := file.Stat()
+	if err != nil {
+		return nil, receiptPath, err
+	}
+	if !info.Mode().IsRegular() {
+		return nil, receiptPath, fmt.Errorf("Deck receipt is not a regular file")
+	}
+	data, err := io.ReadAll(file)
+	if err != nil {
+		return nil, receiptPath, err
+	}
+	var receipt map[string]any
+	if err := json.Unmarshal(data, &receipt); err != nil {
+		return nil, receiptPath, fmt.Errorf("cannot read valid JSON from %s: %w", receiptPath, err)
+	}
+	return receipt, receiptPath, nil
+}
+
+func openManagedFileNoFollow(root *os.File, relative string) (*os.File, error) {
+	parts := strings.Split(filepath.Clean(relative), string(filepath.Separator))
+	dirFD := int(root.Fd())
+	closeDir := false
+	defer func() {
+		if closeDir {
+			_ = unix.Close(dirFD)
+		}
+	}()
+	for _, part := range parts[:len(parts)-1] {
+		nextFD, err := unix.Openat(dirFD, part, unix.O_RDONLY|unix.O_DIRECTORY|unix.O_NOFOLLOW|unix.O_CLOEXEC, 0)
+		if err != nil {
+			return nil, &os.PathError{Op: "openat", Path: relative, Err: err}
+		}
+		if closeDir {
+			_ = unix.Close(dirFD)
+		}
+		dirFD = nextFD
+		closeDir = true
+	}
+	fd, err := unix.Openat(dirFD, parts[len(parts)-1], unix.O_RDONLY|unix.O_NONBLOCK|unix.O_NOFOLLOW|unix.O_CLOEXEC, 0)
+	if err != nil {
+		return nil, &os.PathError{Op: "openat", Path: relative, Err: err}
+	}
+	file := os.NewFile(uintptr(fd), relative)
+	if file == nil {
+		_ = unix.Close(fd)
+		return nil, fmt.Errorf("cannot open managed path %s", relative)
+	}
+	return file, nil
+}
+
 func DeckSyncStatus(target string, catalog Catalog) map[string]any {
-	target, _ = filepath.Abs(target)
-	receiptPath := filepath.Join(target, ".sdlc", "deck-sync.json")
 	expectedDigest, _ := Digest(catalog)
-	if !fileExists(receiptPath) {
+	receipt, receiptPath, err := readDeckReceipt(target)
+	if os.IsNotExist(err) {
 		return map[string]any{
 			"state": "disabled", "mode": "standalone", "catalog": catalog.Catalog,
 			"catalogDigest": expectedDigest, "lastKnownGood": nil,
 		}
 	}
-	var receipt map[string]any
-	if err := LoadFlexibleJSON(receiptPath, &receipt); err != nil {
+	if err != nil {
 		return staleDeckStatus(catalog, expectedDigest, receiptPath, err)
 	}
 	if err := ValidateDeckReceipt(receipt); err != nil {
@@ -221,12 +310,11 @@ func DeckSyncStatus(target string, catalog Catalog) map[string]any {
 }
 
 func CatalogCandidates(target string, catalog Catalog) (map[string]any, error) {
-	receiptPath := filepath.Join(target, ".sdlc", "deck-sync.json")
-	if !fileExists(receiptPath) {
+	receipt, _, err := readDeckReceipt(target)
+	if os.IsNotExist(err) {
 		return nil, fmt.Errorf("no last-known-good Deck receipt")
 	}
-	var receipt map[string]any
-	if err := LoadFlexibleJSON(receiptPath, &receipt); err != nil {
+	if err != nil {
 		return nil, err
 	}
 	if err := ValidateDeckReceipt(receipt); err != nil {

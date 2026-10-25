@@ -14,7 +14,7 @@ mkdir -p /tmp/sdlc-demo && cd /tmp/sdlc-demo
 cat > answers.json <<'EOF'
 {
   "schemaVersion": 1,
-  "seed": "noise/agent@0.1",
+  "seed": "noise/agent@0.2",
   "executionTemplate": "deck/balanced@0.2",
   "answers": {
     "authorship": "agent",

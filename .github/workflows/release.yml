@@ -1,11 +1,14 @@
 name: release
 
-# Tag-triggered builds run only in the public mirror on hosted runners.
-# Every job is guarded so tags in other repositories are a no-op, and
-# release assets can be traced to their public source and build logs.
+# Builds run only in the public mirror on standard GitHub-hosted runners.
+# Every job is guarded so other repositories are a no-op, and release assets
+# can be traced to their public source and build logs. A manual dispatch
+# qualifies the dispatched revision with the same build and smoke checks and
+# keeps the binaries as workflow artifacts; only a pushed v* tag writes a release.
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
 
 # Only release creation and asset publication hold write authority;
 # neither job checks out or executes repository code.
@@ -17,8 +20,8 @@ env:
 
 jobs:
   release:
-    if: github.repository == 'noisefloor-oss/sdlc'
-    runs-on: ubuntu-24.04
+    if: github.repository == 'noisefloor-oss/sdlc' && github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04-arm
     permissions:
       contents: write
     steps:
@@ -35,7 +38,6 @@ jobs:
 
   build:
     if: github.repository == 'noisefloor-oss/sdlc'
-    needs: release
     strategy:
       fail-fast: false
       matrix:
@@ -56,24 +58,53 @@ jobs:
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
+      - name: Resolve the expected version
+        run: |
+          # The repository builds its source version without linker overrides.
+          matches=$(sed -n 's/^[[:space:]]*Version[[:space:]]*=[[:space:]]*"\([^"]*\)"[[:space:]]*$/\1/p' internal/sdlc/catalog.go)
+          if [ "$(printf '%s\n' "$matches" | grep -c .)" -ne 1 ] ||
+            ! printf '%s\n' "$matches" | grep -Eqx '[0-9]+\.[0-9]+\.[0-9]+'; then
+            echo "expected exactly one plain semantic source version, got '$matches'" >&2
+            exit 1
+          fi
+          expected="$matches"
+          case "$GITHUB_REF" in
+            refs/tags/*)
+              # A shakeout tag such as v0.4.0-rc.1 still builds the source version
+              # 0.4.0, so compare against the tag without its pre-release suffix.
+              if ! printf '%s\n' "$GITHUB_REF_NAME" | grep -Eqx 'v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?'; then
+                echo "tag $GITHUB_REF_NAME is not v<semver> with an optional pre-release suffix" >&2
+                exit 1
+              fi
+              tag_version="${GITHUB_REF_NAME#v}"; tag_version="${tag_version%%-*}"
+              if [ "$tag_version" != "$expected" ]; then
+                echo "tag $GITHUB_REF_NAME does not match source version $expected" >&2
+                exit 1
+              fi
+              ;;
+            *)
+              if [ "$GITHUB_EVENT_NAME" != workflow_dispatch ]; then
+                echo "only a manual dispatch may build a non-tag ref ($GITHUB_REF)" >&2
+                exit 1
+              fi
+              ;;
+          esac
+          echo "EXPECTED_VERSION=$expected" >> "$GITHUB_ENV"
       - name: Build the standalone binary
         run: CGO_ENABLED=0 go build -trimpath -o "$ASSET" ./cmd/noise-sdlc
-      - name: Smoke-run version and help
+      - name: Smoke-run version, help, and standalone catalog
         run: |
-          # A shakeout tag such as v0.4.0-rc.1 still builds the source version
-          # 0.4.0, so compare against the tag without its pre-release suffix.
-          VERSION="${GITHUB_REF_NAME#v}"; VERSION="${VERSION%%-*}"
           bin="$GITHUB_WORKSPACE/$ASSET"
           temp_dir=$(mktemp -d)
           trap 'rmdir "$temp_dir"' EXIT
           cd "$temp_dir"
-          # The repository builds its source version without linker overrides.
           actual=$("$bin" --version)
-          if [ "$actual" != "$VERSION" ]; then
-            echo "version smoke failed: got '$actual', want '$VERSION' (tag $GITHUB_REF_NAME)" >&2
+          if [ "$actual" != "$EXPECTED_VERSION" ]; then
+            echo "version smoke failed: got '$actual', want '$EXPECTED_VERSION' ($GITHUB_REF)" >&2
             exit 1
           fi
           "$bin" --help
+          "$bin" check-catalog
       - name: Upload workflow artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
@@ -82,10 +113,11 @@ jobs:
           if-no-files-found: error
 
   publish:
-    if: github.repository == 'noisefloor-oss/sdlc'
-    # Asset publication waits for every architecture to build and pass smoke checks.
-    needs: build
-    runs-on: ubuntu-24.04
+    if: github.repository == 'noisefloor-oss/sdlc' && github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    # Asset publication waits for the release and for every architecture to
+    # build and pass smoke checks.
+    needs: [release, build]
+    runs-on: ubuntu-24.04-arm
     permissions:
       contents: write
     steps:

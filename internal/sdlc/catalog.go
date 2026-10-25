@@ -11,7 +11,8 @@ import (
 )
 
 const (
-	Version             = "0.4.0"
+	DefaultSeedID       = "noise/agent@0.2"
+	Version             = "0.4.1"
 	ExecutionTemplateID = "deck/balanced@0.2"
 )
 
@@ -78,10 +79,33 @@ func LoadCatalog(root string) (Catalog, error) {
 	return catalog, nil
 }
 
+// SupportedSeedIDs returns immutable seed versions, with the default first.
+func SupportedSeedIDs() []string {
+	return []string{DefaultSeedID, "noise/agent@0.1"}
+}
+
 func LoadSeed(root string) (Seed, error) {
+	return LoadSeedVersion(root, DefaultSeedID)
+}
+
+func LoadSeedVersion(root, id string) (Seed, error) {
+	var filename string
+	switch id {
+	case "noise/agent@0.1":
+		filename = "noise-agent-0.1.json"
+	case "noise/agent@0.2":
+		filename = "noise-agent-0.2.json"
+	default:
+		return Seed{}, fmt.Errorf("unknown seed: %s", id)
+	}
 	var seed Seed
-	err := loadResourceJSON(root, filepath.Join(root, "catalog", "packs", "noise-agent-0.1.json"), &seed)
-	return seed, err
+	if err := loadResourceJSON(root, filepath.Join(root, "catalog", "packs", filename), &seed); err != nil {
+		return Seed{}, err
+	}
+	if seed.SchemaVersion != 1 || seed.ID != id {
+		return Seed{}, fmt.Errorf("unsupported lifecycle seed")
+	}
+	return seed, nil
 }
 
 func LoadTemplate(root string) (ExecutionTemplate, error) {
@@ -106,8 +130,12 @@ func ValidateCatalog(catalog Catalog) error {
 		if len(harness.VersionProbe.Argv) == 0 || harness.VersionProbe.Argv[0] != harness.Executable {
 			return fmt.Errorf("%s: version probe executable mismatch", harness.ID)
 		}
-		if _, err := compileVersionPattern(harness.VersionPattern); err != nil {
+		pattern, err := compileVersionPattern(harness.VersionPattern)
+		if err != nil {
 			return fmt.Errorf("%s: invalid version pattern: %w", harness.ID, err)
+		}
+		if pattern.SubexpIndex("version") < 0 {
+			return fmt.Errorf("%s: version pattern lacks a named version capture", harness.ID)
 		}
 		if harness.EnumerationProbe != nil {
 			if len(harness.EnumerationProbe.Argv) == 0 || harness.EnumerationProbe.Argv[0] != harness.Executable {
@@ -155,6 +183,14 @@ func ValidateCatalog(catalog Catalog) error {
 					return fmt.Errorf("%s: duplicate certified version %q", harness.ID, tested)
 				}
 				seenVersions[tested] = struct{}{}
+			}
+		}
+		for left := 0; left < len(harness.Ranges); left++ {
+			for right := left + 1; right < len(harness.Ranges); right++ {
+				first, second := harness.Ranges[left], harness.Ranges[right]
+				if compareVersions(first.Minimum, second.MaximumExclusive) < 0 && compareVersions(second.Minimum, first.MaximumExclusive) < 0 {
+					return fmt.Errorf("%s: overlapping version ranges [%s,%s) and [%s,%s)", harness.ID, first.Minimum, first.MaximumExclusive, second.Minimum, second.MaximumExclusive)
+				}
 			}
 		}
 	}
@@ -239,12 +275,10 @@ func ValidateAll(root string) error {
 	if err := ValidateCatalog(catalog); err != nil {
 		return err
 	}
-	seed, err := LoadSeed(root)
-	if err != nil {
-		return err
-	}
-	if seed.SchemaVersion != 1 || seed.ID != "noise/agent@0.1" {
-		return fmt.Errorf("unsupported lifecycle seed")
+	for _, id := range SupportedSeedIDs() {
+		if _, err := LoadSeedVersion(root, id); err != nil {
+			return err
+		}
 	}
 	template, err := LoadTemplate(root)
 	if err != nil {

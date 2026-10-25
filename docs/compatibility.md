@@ -13,7 +13,7 @@ documented surface is:
 - **Structured output:** schema coverage is listed below; not every JSON
   output has a schema or a schema version. Progress and prompts go to stderr.
 - **Versioned inputs:** the policy seed, harness catalog, and execution
-  templates are content-versioned (`noise/agent@0.1`, `noise/harnesses@0.5`,
+  templates are content-versioned (`noise/agent@0.2`, `noise/harnesses@0.6`,
   `deck/balanced@0.2`); adoptions record the exact digests they installed.
 - **Managed file layout:** `SDLC.md`, the managed `AGENTS.md` block, and the
   `.sdlc/` files from `adopt`, verified by digest.
@@ -61,3 +61,23 @@ output schemas nor top-level schema versions.
 Only the latest tagged release is supported; there are no backports. Linux
 x86-64 is the only qualified platform for this release.
 
+## Review-history policy versions
+
+The operator adopted the PR-first, visible-round requirements on 2026-10-25
+after a delivery reported review underway before its PR existed. This section
+records that policy decision; it is not evidence of review-tool enforcement.
+
+New default plans use `noise/agent@0.2`. This seed requires a PR before formal
+review, an exact candidate head checked before reviewer launch, and preservation
+of every review round on the PR. Operational failures and invalidated rounds
+remain separate from reviewer verdicts. Publication uncertainty leaves the
+round unresolved until its PR records are reconciled. These requirements do
+not claim that every review adapter already enforces them; the delivery owner
+must use an authorized PR publication path or stop and report the limitation.
+
+`noise/agent@0.1` remains available unchanged for pinned answers and existing
+adoptions. To migrate, set `seed` to `noise/agent@0.2` in the project's answers
+file, generate and review the adoption plan, then apply it through `adopt` and
+run `verify`. Review the full plan, including execution routes and local rules,
+before applying it. Do not hand-edit generated policy or its digest receipt.
+Updating this CLI or a shared skill does not migrate existing adoptions.

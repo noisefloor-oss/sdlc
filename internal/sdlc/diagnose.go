@@ -162,10 +162,15 @@ func readDiagnosticFile(root *os.Root, target, relative string) ([]byte, error) 
 }
 
 func runDiagnosticProbe(target string, argv []string) ([]byte, string) {
+	return runBoundedProbe(target, argv, nil)
+}
+
+func runBoundedProbe(target string, argv, environment []string) ([]byte, string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	command := exec.CommandContext(ctx, argv[0], argv[1:]...)
 	command.Dir = target
+	command.Env = environment
 	command.WaitDelay = 250 * time.Millisecond
 	stdout := &boundedBuffer{remaining: diagnosticLimit}
 	stderr := &boundedBuffer{remaining: diagnosticLimit}

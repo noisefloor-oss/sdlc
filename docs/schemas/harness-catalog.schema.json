@@ -132,6 +132,7 @@
                 "enum": [
                   "{model}",
                   "{reasoning}",
+                  "{reasoningConfig}",
                   "{workspace}",
                   "@{promptFile}"
                 ]
@@ -153,7 +154,7 @@
             },
             {
               "contains": {
-                "const": "{reasoning}"
+                "enum": ["{reasoning}", "{reasoningConfig}"]
               },
               "minContains": 1,
               "maxContains": 1

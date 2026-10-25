@@ -110,7 +110,7 @@ func TestInvocationContractObservedCatalogRanges(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if catalog.Catalog != "noise/harnesses@0.5" {
+	if catalog.Catalog != "noise/harnesses@0.6" {
 		t.Fatalf("invocation catalog lacks its new identity: %s", catalog.Catalog)
 	}
 	for _, test := range []struct{ harness, oldVersion, newVersion, cwd, transport string }{

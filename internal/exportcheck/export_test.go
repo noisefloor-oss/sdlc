@@ -73,6 +73,7 @@ var requiredFiles = []string{
 	"catalog/harnesses.json",
 	"catalog/harness-candidates.json",
 	"catalog/packs/noise-agent-0.1.json",
+	"catalog/packs/noise-agent-0.2.json",
 	"catalog/execution/deck-balanced-0.2.json",
 	"docs/schemas/harness-catalog.schema.json",
 	"docs/schemas/evidence.schema.json",

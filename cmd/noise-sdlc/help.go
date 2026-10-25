@@ -33,7 +33,7 @@ var commandDocs = []commandDoc{
 	{
 		name:     "list",
 		group:    "Discovery",
-		summary:  "Print the policy seed this tool installs.",
+		summary:  "List supported policy seeds and mark the default.",
 		synopsis: "noise-sdlc list",
 		reads:    "the policy seed shipped in this repository (catalog/).",
 		writes:   "nothing; JSON to stdout.",
@@ -48,10 +48,10 @@ var commandDocs = []commandDoc{
 		reads:    "the policy seed shipped in this repository (catalog/).",
 		writes:   "nothing; JSON to stdout.",
 		requires: "the noise-sdlc repository root; read-only.",
-		example:  "noise-sdlc show noise/agent@0.1",
+		example:  "noise-sdlc show noise/agent@0.2",
 		notes: []string{
-			"seed-id is optional and defaults to noise/agent@0.1, the only",
-			"seed in this build. Any other id is an error.",
+			"seed-id is optional and defaults to noise/agent@0.2; noise/agent@0.1 is also",
+			"supported for pinned projects. Any other id is an error.",
 		},
 	},
 	{

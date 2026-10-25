@@ -32,6 +32,8 @@ func schemaCatalogFixture(t *testing.T, fragment bool) (string, string, map[stri
 		t.Fatal(err)
 	}
 	harness := original["harnesses"].([]any)[0].(map[string]any)
+	// This mutation fixture starts from one legacy range, not every released range.
+	harness["ranges"] = harness["ranges"].([]any)[:1]
 	document := map[string]any{"schemaVersion": 1, "catalog": "noise/harnesses@0.4", "harnesses": []any{harness}}
 	path := filepath.Join(root, "catalog/harnesses.json")
 	writeSchemaFixture(t, filepath.Join(root, "catalog/harness-candidates.json"), map[string]any{"schemaVersion": 1, "candidates": []any{}})

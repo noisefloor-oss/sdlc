@@ -12,10 +12,11 @@ const (
 	MaxInvocationOutputBytes = 16 * 1024 * 1024
 )
 
-// Version 1 admits only the two bounded argv grammars observed in public CLI
+// Version 1 admits only bounded argv grammars observed in public CLI
 // help. Enabling another grammar requires its own contract and fixture review.
 var invocationV1Argv = map[string][]string{
 	"claude": {"claude", "--print", "--input-format", "text", "--output-format", "text", "--model", "{model}", "--effort", "{reasoning}", "--permission-mode", "dontAsk", "--no-session-persistence"},
+	"codex":  {"codex", "exec", "--ephemeral", "--model", "{model}", "--config", "{reasoningConfig}", "--sandbox", "workspace-write", "--color", "never", "-"},
 	"omp":    {"omp", "--print", "--mode", "text", "--no-session", "--no-prewalk", "--approval-mode", "write", "--model", "{model}", "--thinking", "{reasoning}", "--cwd", "{workspace}", "@{promptFile}"},
 }
 
@@ -56,7 +57,7 @@ func validateInvocationAction(harness Harness, name string, action InvocationAct
 			return fmt.Errorf("argv contains empty, oversized, control, or shell text")
 		}
 		switch arg {
-		case "{model}", "{reasoning}", "{workspace}", "@{promptFile}":
+		case "{model}", "{reasoning}", "{reasoningConfig}", "{workspace}", "@{promptFile}":
 			placeholders[arg]++
 		default:
 			if strings.ContainsAny(arg, "{}") {
@@ -64,7 +65,7 @@ func validateInvocationAction(harness Harness, name string, action InvocationAct
 			}
 		}
 	}
-	if placeholders["{model}"] != 1 || placeholders["{reasoning}"] != 1 {
+	if placeholders["{model}"] != 1 || placeholders["{reasoning}"]+placeholders["{reasoningConfig}"] != 1 {
 		return fmt.Errorf("argv requires exactly one model and reasoning placeholder")
 	}
 	if expected, ok := invocationV1Argv[harness.ID]; !ok || !slices.Equal(action.Argv, expected) {

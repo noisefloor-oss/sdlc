@@ -9,7 +9,9 @@ import (
 	"mime"
 	"net"
 	"net/http"
+	"net/url"
 	"strconv"
+	"strings"
 )
 
 const webHTML = `<!doctype html>
@@ -34,6 +36,7 @@ type webServer struct {
 	actionToken string
 	catalog     Catalog
 	template    ExecutionTemplate
+	port        int
 }
 
 func ServeWeb(host string, port int, target, root string, baseline AnswersFile) error {
@@ -61,11 +64,20 @@ func ServeWeb(host string, port int, target, root string, baseline AnswersFile) 
 	if err != nil {
 		return err
 	}
+	server.port = listener.Addr().(*net.TCPAddr).Port
 	fmt.Printf("noise sdlc web UI: http://%s\n", listener.Addr())
 	return http.Serve(listener, server)
 }
 
 func (server *webServer) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	if !validLoopbackHostPort(request.Host, server.port) {
+		writeJSON(writer, http.StatusForbidden, map[string]string{"error": "host is not the bound loopback origin"})
+		return
+	}
+	if request.Method == http.MethodPost && !validLoopbackOrigin(request.Header.Get("origin"), server.port) {
+		writeJSON(writer, http.StatusForbidden, map[string]string{"error": "origin is not the bound loopback origin"})
+		return
+	}
 	if request.Method == http.MethodGet && request.URL.Path == "/" {
 		writer.Header().Set("content-type", "text/html; charset=utf-8")
 		writer.Header().Set("cache-control", "no-store")
@@ -93,6 +105,40 @@ func (server *webServer) ServeHTTP(writer http.ResponseWriter, request *http.Req
 		return
 	}
 	writeJSON(writer, status, response)
+}
+
+func validLoopbackHostPort(hostport string, port int) bool {
+	host, portText, err := net.SplitHostPort(hostport)
+	if err != nil {
+		if port != 80 {
+			return false
+		}
+		switch {
+		case strings.HasPrefix(hostport, "["):
+			if !strings.HasSuffix(hostport, "]") {
+				return false
+			}
+			host = strings.TrimSuffix(strings.TrimPrefix(hostport, "["), "]")
+		case strings.Contains(hostport, ":"):
+			return false
+		default:
+			host = hostport
+		}
+	} else if portText != strconv.Itoa(port) {
+		return false
+	}
+	return oneOf(host, "127.0.0.1", "::1") || strings.EqualFold(host, "localhost")
+}
+
+func validLoopbackOrigin(origin string, port int) bool {
+	if origin == "" {
+		return true
+	}
+	parsed, err := url.Parse(origin)
+	if err != nil || parsed.Scheme != "http" || parsed.Host == "" || parsed.User != nil || parsed.Path != "" || parsed.ForceQuery || parsed.RawQuery != "" || parsed.Fragment != "" {
+		return false
+	}
+	return validLoopbackHostPort(parsed.Host, port)
 }
 
 func (server *webServer) dispatch(method, path string, body map[string]any) (int, any, error) {

@@ -151,6 +151,8 @@ func PrepareInvocation(catalog Catalog, input InvocationInput) (InvocationPlan, 
 			plan.Argv[index] = input.Model
 		case "{reasoning}":
 			plan.Argv[index] = input.Reasoning
+		case "{reasoningConfig}":
+			plan.Argv[index] = "model_reasoning_effort=" + strconv.Quote(input.Reasoning)
 		case "{workspace}":
 			plan.Argv[index] = input.Workspace
 		case "@{promptFile}":

@@ -6,7 +6,7 @@ Projects that run coding agents need lifecycle policy: which rules govern
 changes, which harnesses and models may fill implementation and review roles,
 and how drift in those decisions is detected. Copying another project's
 governance files rots quickly. noise-sdlc instead ships a tested policy seed
-(`noise/agent@0.1`), a harness catalog (`noise/harnesses@0.5`), and an
+(`noise/agent@0.2`), a harness catalog (`noise/harnesses@0.6`), and an
 execution template (`deck/balanced@0.2`), and installs them into your project
 as managed files whose exact bytes are recorded.
 

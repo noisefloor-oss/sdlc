@@ -1,0 +1,138 @@
+{
+  "schemaVersion": 1,
+  "id": "noise/agent@0.2",
+  "title": "Noise agent delivery seed",
+  "rules": [
+    {
+      "id": "noise.agent.authority.requirements",
+      "title": "Name authoritative requirements",
+      "requirement": "The accepted product proposal or specification is authoritative; accepted ADRs record later durable decisions. Derived task state and generated policy do not override either.",
+      "applicability": "all-work",
+      "assurance": "manual",
+      "owner": null,
+      "contract": null,
+      "critical": true,
+      "evidence": [
+        "catalog/packs/noise-agent-0.1.json: noise.agent.authority.requirements"
+      ]
+    },
+    {
+      "id": "noise.agent.work.bounded-task",
+      "title": "Keep one bounded leaf active",
+      "requirement": "Represent implementation work in noise tasks and keep only one independently verifiable leaf task in progress.",
+      "applicability": "change-delivery",
+      "assurance": "provider",
+      "owner": "noise tasks",
+      "contract": "backlog-integrity",
+      "critical": false,
+      "evidence": [
+        "catalog/packs/noise-agent-0.1.json: noise.agent.work.bounded-task"
+      ]
+    },
+    {
+      "id": "noise.agent.change.one-idea",
+      "title": "Deliver one coherent change",
+      "requirement": "Use a short-lived branch for one coherent idea and squash-merge its reviewed pull request.",
+      "applicability": "change-delivery",
+      "assurance": "project",
+      "owner": "project Git workflow",
+      "contract": "project-git-workflow",
+      "critical": false,
+      "evidence": [
+        "catalog/packs/noise-agent-0.1.json: noise.agent.change.one-idea"
+      ]
+    },
+    {
+      "id": "noise.agent.checks.deterministic",
+      "title": "Run deterministic candidate checks",
+      "requirement": "Run the project-owned deterministic checks against the exact candidate revision before requesting formal review.",
+      "applicability": "change-delivery",
+      "assurance": "project",
+      "owner": "project check command",
+      "contract": "project-check-command",
+      "critical": true,
+      "evidence": [
+        "catalog/packs/noise-agent-0.1.json: noise.agent.checks.deterministic"
+      ]
+    },
+    {
+      "id": "noise.agent.review.exact-head-independent",
+      "title": "Require independent exact-head review",
+      "requirement": "Agent-authored work requires formal review of the exact candidate revision by an approved high-capability model from a different model family than the implementer.",
+      "applicability": "agent-authored",
+      "assurance": "provider",
+      "owner": "noise review",
+      "contract": "exact-head-independent-review",
+      "critical": true,
+      "evidence": [
+        "catalog/packs/noise-agent-0.1.json: noise.agent.review.exact-head-independent"
+      ]
+    },
+    {
+      "id": "noise.agent.review.visible-current",
+      "title": "Keep review visible and current",
+      "requirement": "Create the pull request before requesting formal review. Supply and check the exact candidate head before reviewer launch. Retain every formal review round on that PR, including approvals, requested changes, rejection and inconclusive results. Record crashes, publication uncertainty and head-change invalidation as operational outcomes separate from reviewer verdicts; never invent a verdict. Publication failure leaves the round unresolved: reconcile PR records before retrying and stop if no authorized publication path is available. A changed candidate invalidates prior approval and unresolved review threads block completion. Report review as underway only after an actual dispatch against the PR and identify the PR and round. Draft PRs may host review unless project policy forbids it, but cannot merge.",
+      "applicability": "agent-authored",
+      "assurance": "provider",
+      "owner": "noise review",
+      "contract": "review-history-and-invalidation",
+      "critical": true,
+      "evidence": [
+        "catalog/packs/noise-agent-0.1.json: noise.agent.review.visible-current",
+        "docs/compatibility.md: Review-history policy versions"
+      ]
+    },
+    {
+      "id": "noise.agent.authority.external-effects",
+      "title": "Stop for external authority",
+      "requirement": "Credentials, spend, deployment, publication, remote creation, repository settings, package publication, and other external effects require explicit human authority.",
+      "applicability": "external-effects",
+      "assurance": "manual",
+      "owner": null,
+      "contract": null,
+      "critical": true,
+      "evidence": [
+        "catalog/packs/noise-agent-0.1.json: noise.agent.authority.external-effects"
+      ]
+    },
+    {
+      "id": "noise.agent.evidence.runtime-visual",
+      "title": "Use the evidence that can prove the claim",
+      "requirement": "When deterministic checks cannot prove runtime or visual behavior, obtain evidence from the specialist runtime or visual owner without treating lifecycle integrity as that evidence.",
+      "applicability": "non-deterministic-claims",
+      "assurance": "provider",
+      "owner": "project evidence owner",
+      "contract": "project-declared-runtime-or-visual-contract",
+      "critical": false,
+      "evidence": [
+        "catalog/packs/noise-agent-0.1.json: noise.agent.evidence.runtime-visual"
+      ]
+    },
+    {
+      "id": "noise.agent.hygiene.sensitive-data",
+      "title": "Keep sensitive data out of artifacts",
+      "requirement": "Do not inspect, store, commit, log, or transmit credentials, authentication output, environment values, private transcripts, or hidden reasoning.",
+      "applicability": "all-work",
+      "assurance": "manual",
+      "owner": null,
+      "contract": null,
+      "critical": true,
+      "evidence": [
+        "catalog/packs/noise-agent-0.1.json: noise.agent.hygiene.sensitive-data"
+      ]
+    },
+    {
+      "id": "noise.agent.ownership.honest",
+      "title": "Name enforcement owners honestly",
+      "requirement": "Every gate names its provider, project command, manual judgment, or advisory status; noise sdlc verifies only its managed artifact integrity.",
+      "applicability": "all-work",
+      "assurance": "manual",
+      "owner": null,
+      "contract": null,
+      "critical": true,
+      "evidence": [
+        "catalog/packs/noise-agent-0.1.json: noise.agent.ownership.honest"
+      ]
+    }
+  ]
+}

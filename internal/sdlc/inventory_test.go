@@ -243,6 +243,61 @@ func TestCatalogRejectsNonNormalizedReasoningLevel(t *testing.T) {
 	}
 }
 
+func TestCatalogRequiresNamedHarnessVersionCapture(t *testing.T) {
+	for _, test := range []struct {
+		name    string
+		pattern string
+		valid   bool
+	}{
+		{"named", `^alpha (?P<version>[0-9]+\.[0-9]+\.[0-9]+)$`, true},
+		{"missing", `^alpha [0-9]+\.[0-9]+\.[0-9]+$`, false},
+		{"unnamed", `^alpha ([0-9]+\.[0-9]+\.[0-9]+)$`, false},
+		{"misnamed", `^alpha (?P<ver>[0-9]+\.[0-9]+\.[0-9]+)$`, false},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			harness := testHarness("example", "example")
+			harness.VersionPattern = test.pattern
+			err := ValidateCatalog(Catalog{SchemaVersion: 1, Catalog: "test", Harnesses: []Harness{harness}})
+			if test.valid && err != nil {
+				t.Fatalf("expected named version capture to pass: %v", err)
+			}
+			if !test.valid && (err == nil || !strings.Contains(err.Error(), "lacks a named version capture")) {
+				t.Fatalf("expected named capture rejection, got %v", err)
+			}
+		})
+	}
+}
+
+func TestCatalogRequiresDisjointVersionRanges(t *testing.T) {
+	for _, test := range []struct {
+		name   string
+		ranges [][2]string
+		valid  bool
+	}{
+		{"identical", [][2]string{{"1.0.0", "2.0.0"}, {"1.0.0", "2.0.0"}}, false},
+		{"nested", [][2]string{{"1.0.0", "3.0.0"}, {"1.5.0", "2.0.0"}}, false},
+		{"partial", [][2]string{{"1.0.0", "2.0.0"}, {"1.5.0", "2.5.0"}}, false},
+		{"reverse partial", [][2]string{{"1.5.0", "2.5.0"}, {"1.0.0", "2.0.0"}}, false},
+		{"touching", [][2]string{{"1.0.0", "2.0.0"}, {"2.0.0", "3.0.0"}}, true},
+		{"disjoint", [][2]string{{"2.0.0", "3.0.0"}, {"1.0.0", "2.0.0"}}, true},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			harness := testHarness("example", "example")
+			harness.Ranges = make([]VersionRange, 0, len(test.ranges))
+			for _, bounds := range test.ranges {
+				harness.Ranges = append(harness.Ranges, VersionRange{Minimum: bounds[0], MaximumExclusive: bounds[1], Status: "experimental"})
+			}
+			err := ValidateCatalog(Catalog{SchemaVersion: 1, Catalog: "test", Harnesses: []Harness{harness}})
+			if test.valid && err != nil {
+				t.Fatalf("expected disjoint ranges to pass: %v", err)
+			}
+			if !test.valid && (err == nil || !strings.Contains(err.Error(), "overlapping version ranges")) {
+				t.Fatalf("expected overlap rejection, got %v", err)
+			}
+		})
+	}
+}
+
 func testHarness(id, executable string) Harness {
 	return Harness{
 		ID: id, Executable: executable,

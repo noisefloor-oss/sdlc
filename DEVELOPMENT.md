@@ -18,12 +18,19 @@ This repository is a **curated release mirror**, not a development repository.
 
 ## Releases
 
-Cut a release by copying a curated snapshot of private main onto this mirror,
-preparing a draft release with curated notes for the intended tag, then pushing
-the matching `v*` tag. The tag's version without `v` must match the CLI's source
-version. The release workflow builds Linux amd64 and arm64 binaries and attaches
-them with `SHA256SUMS`, preserving existing notes and draft status; publish the
-draft when the assets are ready.
+Cut a release by copying a curated snapshot of private main onto this mirror
+and prequalifying that exact commit with a manual run of the release workflow.
+A manual run builds Linux amd64 and arm64 binaries on standard GitHub-hosted
+runners, checks that each binary reports the source version from
+`internal/sdlc/catalog.go` and passes the help and standalone catalog checks,
+and keeps the binaries only as workflow artifacts; it never creates or changes
+a release. Next, prepare a draft release with curated notes for the intended
+tag, then push the matching `v*` tag at the same commit. The tag's version
+without `v` and any pre-release suffix must match the source version, or the
+build fails. A tag push repeats the same builds and checks, then attaches the
+binaries with `SHA256SUMS` only after both architectures pass, preserving
+existing notes and draft status. Publish the draft once every asset is attached
+and the tag's checks have passed.
 
 ## AI assistance
 
@@ -38,4 +45,4 @@ verified from an exact, audited candidate commit before publication.
 This release is **experimental**: it is daily-driven by its author against
 real repositories, but interfaces, file formats, and behavior may change
 between releases without a deprecation cycle. Compatibility commitments, where
-they exist, are stated explicitly in the README.
+they exist, are stated explicitly in [docs/compatibility.md](docs/compatibility.md).
