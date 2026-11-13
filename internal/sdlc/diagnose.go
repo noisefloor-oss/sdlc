@@ -144,7 +144,10 @@ func readDiagnosticFile(root *os.Root, target, relative string) ([]byte, error) 
 	}
 	info, err := root.Lstat(relative)
 	if err != nil {
-		return nil, err
+		if os.IsNotExist(err) {
+			return nil, err
+		}
+		return nil, fmt.Errorf("%w: %w", errDiagnosticUnreadable, err)
 	}
 	if !info.Mode().IsRegular() || info.Size() > diagnosticLimit {
 		return nil, errDiagnosticUnreadable

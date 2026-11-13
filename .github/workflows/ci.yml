@@ -11,16 +11,20 @@ permissions:
 env:
   TMPDIR: /tmp
 
-# Only the exact public mirror selects standard GitHub-hosted runners; every
-# other repository keeps its private self-hosted runner selection.
+# Standard hosted ARM64 validation preserves the public architecture route.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   checks:
-    runs-on: ${{ github.repository == 'noisefloor-oss/sdlc' && 'ubuntu-24.04-arm' || fromJSON('["self-hosted","Linux","ARM64"]') }}
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
     steps:
-      - name: Reject external fork source on persistent runners
+      - name: Reject unadmitted external fork source
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository
         run: |
-          echo "Import this change into a same-repository branch before running self-hosted CI." >&2
+          echo "Import this change into a same-repository branch before CI certification." >&2
           exit 1
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -42,12 +46,13 @@ jobs:
         run: SDLC_EXPORT_CHECK=1 go test -run Export ./internal/exportcheck/
 
   standalone:
-    runs-on: ${{ github.repository == 'noisefloor-oss/sdlc' && 'ubuntu-24.04-arm' || fromJSON('["self-hosted","Linux","ARM64"]') }}
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
     steps:
-      - name: Reject external fork source on persistent runners
+      - name: Reject unadmitted external fork source
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository
         run: |
-          echo "Import this change into a same-repository branch before running self-hosted CI." >&2
+          echo "Import this change into a same-repository branch before CI certification." >&2
           exit 1
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

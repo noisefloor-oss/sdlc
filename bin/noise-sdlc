@@ -38,7 +38,7 @@ fi
 
 rm -f -- "$build_binary"
 if ! go_command=$(sdlc_go_command); then
-    echo "noise-sdlc: no verified current prebuilt; Go 1.26.10 is required to build this source checkout (run bin/build-noise-sdlc when Go is available)" >&2
+    echo "noise-sdlc: no verified current prebuilt; Go 1.26.11 is required to build this source checkout (run bin/build-noise-sdlc when Go is available)" >&2
     exit 2
 fi
 

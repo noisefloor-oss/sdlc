@@ -806,7 +806,7 @@ func verifyWithReader(target string, read func(string) ([]byte, error)) (map[str
 func OnboardingStatus(target string) map[string]any {
 	target, _ = filepath.Abs(target)
 	bootstrap, bootstrapErr := inspectBootstrap(target)
-	if bootstrapErr != nil {
+	if bootstrapErr != nil && !hasAdoptionState(target) {
 		return onboardingResult("repair-required", "invalid-bootstrap", false)
 	}
 	managedBlock := false
@@ -1127,7 +1127,7 @@ func validateManagedPath(root, relative string) error {
 			return nil
 		}
 		if statErr != nil {
-			return fmt.Errorf("cannot inspect managed path %s: %w", relative, statErr)
+			return fmt.Errorf("%w: cannot inspect managed path %s: %w", errDiagnosticUnreadable, relative, statErr)
 		}
 		if info.Mode()&os.ModeSymlink != 0 {
 			return fmt.Errorf("managed path contains symbolic link: %s", relative)

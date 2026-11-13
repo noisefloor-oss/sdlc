@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 )
 
 func LoadJSON(path string, destination any) error {
@@ -20,6 +19,9 @@ func LoadJSON(path string, destination any) error {
 }
 
 func decodeJSON(path string, data []byte, destination any) error {
+	if string(bytes.TrimSpace(data)) == "null" {
+		return fmt.Errorf("cannot read valid JSON from %s: null document", path)
+	}
 	decoder := json.NewDecoder(bytes.NewReader(data))
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(destination); err != nil {
@@ -74,29 +76,4 @@ func Digest(value any) (string, error) {
 		return "", err
 	}
 	return DigestBytes(encoded), nil
-}
-
-func atomicWrite(path string, content []byte) error {
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-		return err
-	}
-	temporary, err := os.CreateTemp(filepath.Dir(path), ".noise-sdlc-")
-	if err != nil {
-		return err
-	}
-	temporaryPath := temporary.Name()
-	defer os.Remove(temporaryPath)
-	if _, err = temporary.Write(content); err == nil {
-		err = temporary.Sync()
-	}
-	if closeErr := temporary.Close(); err == nil {
-		err = closeErr
-	}
-	if err != nil {
-		return err
-	}
-	if err := os.Chmod(temporaryPath, 0o644); err != nil {
-		return err
-	}
-	return os.Rename(temporaryPath, path)
 }

@@ -35,7 +35,16 @@ leaves routes unresolved rather than inventing ones you cannot run.
   probes, including discovery-candidate version probes, with five- or
   ten-second timeouts. `plan`, `adopt`, `execution plan`, and `web` (on each
   plan/adoption request) run `git rev-parse HEAD` in targets containing `.git`
-  for a read-only revision lookup, with no explicit timeout. `diagnose` runs
+  for a read-only revision lookup, with no explicit timeout. `verify` (alias
+  `status`) and `remove` run read-only Git probes during the shadow-artifact
+  scan; `onboarding` does so for adoption states that call `verify`, and `web`
+  does so for adopted onboarding checks and post-adoption verification. The
+  probes (`git rev-parse --path-format=absolute --git-common-dir`, `git
+  rev-parse --show-toplevel`, and `git worktree list --porcelain -z`) run in
+  the target even without `.git` and in nested worktree candidates, with
+  five-second timeouts; missing or unusable Git leaves the scan unchanged.
+  `GIT_`-prefixed environment variables are stripped so inherited Git context
+  cannot redirect discovery. `diagnose` runs
   `noise tasks version`, `noise tasks context --json`, and
   `noise tasks verify --json` with five-second timeouts. All run in the target
   project; those binaries may perform their own filesystem or network I/O.

@@ -97,3 +97,23 @@ func TestSharedVerifierPreservesReadErrorsAndNamesMalformedReceipt(t *testing.T)
 		t.Fatalf("malformed receipt lost source path: %v", err)
 	}
 }
+
+func TestDiagnoseUnreadableDirectoryIsUnknownNotRepairRequired(t *testing.T) {
+	if os.Geteuid() == 0 {
+		t.Skip("permission bits do not restrict root")
+	}
+	root, target := diagnosisFixture(t, "# Project\n")
+	directory := filepath.Join(target, ".sdlc")
+	if err := os.Chmod(directory, 0o000); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chmod(directory, 0o700) })
+	result, err := diagnose(root, target, diagnosisHealthyProbe(t, target, nil))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Integrity != "unknown" {
+		t.Fatalf("unreadable directory was classified as corruption: %+v", result)
+	}
+	diagnosisRequireCode(t, result, "integrity-unreadable")
+}

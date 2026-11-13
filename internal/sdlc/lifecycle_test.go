@@ -42,6 +42,32 @@ func TestPlanIsDeterministicAndAdoptionVerifies(t *testing.T) {
 	}
 }
 
+func TestConsumedBootstrapReceiptDoesNotInvalidateVerifiedAdoption(t *testing.T) {
+	root, err := RepositoryRoot()
+	if err != nil {
+		t.Fatal(err)
+	}
+	target := t.TempDir()
+	inventory := Inventory{SchemaVersion: 1, Source: "test", Catalog: "harnesses@0.3", Harnesses: []HarnessObservation{}}
+	built, err := BuildPlan(target, root, testAnswers(), &inventory)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := Adopt(target, built.Outputs); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Verify(target); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(target, ".sdlc", "bootstrap.json"), []byte("consumed bootstrap receipt\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	status := OnboardingStatus(target)
+	if status["state"] != "already-onboarded" || status["reason"] != "verified-adoption" {
+		t.Fatalf("consumed receipt invalidated verified adoption: %#v", status)
+	}
+}
+
 func TestAdoptRejectsSymlinkedManagedParent(t *testing.T) {
 	target := t.TempDir()
 	external := t.TempDir()

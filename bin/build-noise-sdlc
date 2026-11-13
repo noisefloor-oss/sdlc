@@ -4,7 +4,7 @@ set -eu
 repository_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 . "$repository_root/bin/launcher-common.sh"
 if ! go_command=$(sdlc_go_command); then
-    echo "noise-sdlc: Go 1.26.10 is required to build the prebuilt binary" >&2
+    echo "noise-sdlc: Go 1.26.11 is required to build the prebuilt binary" >&2
     exit 2
 fi
 build_directory=$(mktemp -d "$repository_root/bin/.noise-sdlc-build.XXXXXX")

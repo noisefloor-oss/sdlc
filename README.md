@@ -59,10 +59,10 @@ Give your coding agent this prompt:
 > Install noise-sdlc from its latest release, following
 > <https://github.com/noisefloor-oss/sdlc/blob/main/skills/install-noise-sdlc/SKILL.md>.
 
-Requirements: Linux on x86-64 and Go 1.26.10 or newer.
+Requirements: Linux on x86-64 and Go 1.26.11 or newer.
 
 ```sh
-go install github.com/noisefloor-oss/sdlc/cmd/noise-sdlc@v0.4.1
+go install github.com/noisefloor-oss/sdlc/cmd/noise-sdlc@v0.5.0
 noise-sdlc --version
 ```
 

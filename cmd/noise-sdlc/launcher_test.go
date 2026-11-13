@@ -32,7 +32,7 @@ func launcherFixture(t *testing.T) string {
 		}
 		writeLauncherFile(t, filepath.Join(fixture, "bin", name), string(contents), 0o755)
 	}
-	writeLauncherFile(t, filepath.Join(fixture, "go.mod"), "module launcher-fixture\n\ngo 1.26.10\n", 0o644)
+	writeLauncherFile(t, filepath.Join(fixture, "go.mod"), "module launcher-fixture\n\ngo 1.26.11\n", 0o644)
 	writeLauncherFile(t, filepath.Join(fixture, "cmd/noise-sdlc/main.go"), `package main
 import ("fmt"; "os"; "strings")
 func main() {

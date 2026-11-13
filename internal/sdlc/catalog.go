@@ -12,12 +12,12 @@ import (
 
 const (
 	DefaultSeedID       = "noise/agent@0.2"
-	Version             = "0.4.1"
+	Version             = "0.5.0"
 	ExecutionTemplateID = "deck/balanced@0.2"
 )
 
 var (
-	semanticVersionPattern = regexp.MustCompile(`^([0-9]+)\.([0-9]+)\.([0-9]+)$`)
+	semanticVersionPattern = regexp.MustCompile(`^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$`)
 	executableNamePattern  = regexp.MustCompile(`^[a-z0-9][a-z0-9.-]*$`)
 	// normalizedReasoningLevels mirrors the enum in
 	// docs/schemas/harness-catalog.schema.json; harness-specific spellings
@@ -288,6 +288,9 @@ func ValidateAll(root string) error {
 }
 
 func matchingRange(harness Harness, version string) *VersionRange {
+	if !semanticVersionPattern.MatchString(version) {
+		return nil
+	}
 	for index := range harness.Ranges {
 		candidate := &harness.Ranges[index]
 		if compareVersions(candidate.Minimum, version) <= 0 && compareVersions(version, candidate.MaximumExclusive) < 0 {

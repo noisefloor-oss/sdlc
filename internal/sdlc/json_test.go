@@ -20,6 +20,7 @@ func TestDecodeJSONRequiresEOF(t *testing.T) {
 		{"second array", `{"value":"first"}[]`, false},
 		{"garbage", `{"value":"first"}not-json`, false},
 		{"malformed first object", `{"value":`, false},
+		{"null document", `null`, false},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			var destination struct {

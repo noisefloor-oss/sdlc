@@ -9,8 +9,8 @@ import (
 )
 
 func TestCurrentKimiAndGLMRoutesMatchCatalogContracts(t *testing.T) {
-	if Version != "0.4.1" {
-		t.Fatalf("public release must report version 0.4.1, got %q", Version)
+	if Version != "0.5.0" {
+		t.Fatalf("public release must report version 0.5.0, got %q", Version)
 	}
 	root, err := RepositoryRoot()
 	if err != nil {
